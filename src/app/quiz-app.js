@@ -758,7 +758,7 @@ export default function QuizApp({ weeks }) {
               </div>
               {runMode !== "week" && (
                 <div className="exam-pass-note">
-                  EXAM PASS MARK <b>MORE THAN 50%</b>
+                  EXAM PASS MARK <b>50% OR MORE</b>
                 </div>
               )}
               <div
@@ -942,7 +942,7 @@ export default function QuizApp({ weeks }) {
               </div>
               {runMode !== "week" && (
                 <div className="exam-pass-note">
-                  EXAM PASS MARK <b>MORE THAN 50%</b>
+                  EXAM PASS MARK <b>50% OR MORE</b>
                 </div>
               )}
               <div
@@ -965,15 +965,17 @@ export default function QuizApp({ weeks }) {
                   </span>
                   <h1>
                     {runMode !== "week" && result.passed
-                      ? "Congratulations, you passed."
+                      ? "Noice"
                       : runMode === "week"
                         ? "Assignment complete."
-                        : "Exam complete."}
+                        : "Git Gud"}
                   </h1>
                   <p>
                     {runMode !== "week" && result.passed
-                      ? "A strong result. Keep the momentum going."
-                      : "Review your answers and explanations below."}
+                      ? "You reached the pass mark. Keep the momentum going."
+                      : runMode !== "week"
+                        ? "Below the pass mark. Review your answers and try again."
+                        : "Review your answers and explanations below."}
                   </p>
                 </div>
                 <strong

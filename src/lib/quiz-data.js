@@ -99,7 +99,7 @@ function gradeQuestions(questions, answers) {
     score,
     total,
     percentage: Math.round((score / total) * 100),
-    passed: (score / total) * 100 > 50,
+    passed: (score / total) * 100 >= 50,
     results,
   };
 }
