@@ -12,7 +12,6 @@ import {
   House,
   RotateCcw,
   Shuffle,
-  Sparkles,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -841,10 +840,12 @@ export default function QuizApp({ weeks }) {
                 className={`result-banner ${runMode !== "week" ? (result.passed ? "passed" : "failed") : ""}`}
               >
                 <div className="result-icon">
-                  {runMode !== "week" && result.passed ? (
-                    <Sparkles size={21} />
-                  ) : (
+                  {runMode === "week" ? (
                     <CheckCircle2 size={19} />
+                  ) : result.passed ? (
+                    <Check size={21} />
+                  ) : (
+                    <X size={21} />
                   )}
                 </div>
                 <div>
