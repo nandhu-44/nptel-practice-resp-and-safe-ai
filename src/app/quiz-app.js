@@ -124,7 +124,13 @@ export default function QuizApp({ weeks }) {
       if (shuffleOptions) {
         examQuestions = examQuestions.map((item) => ({
           ...item,
-          options: item.options ? shuffleList(item.options) : null,
+          options: item.options
+            ? shuffleList(item.options).map((option, index) => ({
+                ...option,
+                sourceOption: option.option,
+                option: String.fromCharCode(97 + index),
+              }))
+            : null,
         }));
       }
       setQuestions(examQuestions);
@@ -553,15 +559,16 @@ export default function QuizApp({ weeks }) {
                   <div className="answer-list">
                     {question.options.map((option) => {
                       const multiple = question.type === "MSQ";
+                      const answerValue = option.sourceOption ?? option.option;
                       const selected = multiple
-                        ? (answers[question.id] ?? []).includes(option.option)
-                        : answers[question.id] === option.option;
+                        ? (answers[question.id] ?? []).includes(answerValue)
+                        : answers[question.id] === answerValue;
                       return (
                         <button
                           key={option.option}
                           className={`answer-option ${selected ? "is-selected" : ""}`}
                           onClick={() =>
-                            answer(question.id, option.option, multiple)
+                            answer(question.id, answerValue, multiple)
                           }
                           type="button"
                           disabled={Boolean(questionFeedback)}
@@ -610,7 +617,10 @@ export default function QuizApp({ weeks }) {
                     <span className="eyebrow">CORRECT ANSWER</span>
                     <p>
                       <CorrectAnswers
-                        answers={questionFeedback.correctAnswersFullText}
+                        answers={getCorrectAnswerTexts(
+                          question,
+                          questionFeedback,
+                        )}
                         multiple={question.type === "MSQ"}
                       />
                     </p>
@@ -780,7 +790,12 @@ export default function QuizApp({ weeks }) {
                       <span className="eyebrow">CORRECT ANSWER</span>
                       <p>
                         <CorrectAnswers
-                          answers={item.correctAnswersFullText}
+                          answers={getCorrectAnswerTexts(
+                            questions.find(
+                              (question) => question.id === item.id,
+                            ),
+                            item,
+                          )}
                           multiple={item.type === "MSQ"}
                         />
                       </p>
@@ -932,6 +947,17 @@ function hasAnswer(value) {
 
 function formatCorrectAnswer(answer) {
   return answer.replace(/^([a-z])\.\s*/i, "($1) ");
+}
+
+function getCorrectAnswerTexts(question, result) {
+  if (!question?.options?.some((option) => option.sourceOption)) {
+    return result.correctAnswersFullText;
+  }
+
+  const correctOptions = new Set(result.correctAnswers);
+  return question.options
+    .filter((option) => correctOptions.has(option.sourceOption))
+    .map((option) => `${option.option}. ${option.text}`);
 }
 
 function CorrectAnswers({ answers, multiple }) {
