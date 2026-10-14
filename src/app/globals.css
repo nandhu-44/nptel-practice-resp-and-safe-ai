@@ -837,6 +837,17 @@ input:focus-visible {
   font-size: 29px;
   font-weight: 470;
 }
+.quiz-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.quiz-submit-button {
+  min-height: 34px;
+  gap: 7px;
+  padding: 0 11px;
+  font-size: 10px;
+}
 .quiz-heading .eyebrow span {
   color: #666e64;
 }
@@ -1572,6 +1583,11 @@ input:focus-visible {
   }
   .quiz-heading h1 {
     font-size: 25px;
+  }
+  .quiz-heading-actions {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 7px;
   }
   .question-progress {
     grid-template-columns: repeat(6, minmax(0, 1fr));

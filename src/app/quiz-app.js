@@ -196,13 +196,6 @@ export default function QuizApp({ weeks }) {
   async function checkAnswer() {
     if (!question || answers[question.id] === undefined || questionFeedback)
       return;
-    if (runMode !== "week" && !showExamAnswers) {
-      setCheckedResults((old) => ({
-        ...old,
-        [question.id]: { submitted: true },
-      }));
-      return;
-    }
     setBusy(true);
     setError("");
     try {
@@ -747,9 +740,21 @@ export default function QuizApp({ weeks }) {
                         : "Full exam"}
                   </h1>
                 </div>
-                <span className="eyebrow">
-                  {String(answered).padStart(2, "0")} ANSWERED
-                </span>
+                <div className="quiz-heading-actions">
+                  <span className="eyebrow">
+                    {String(answered).padStart(2, "0")} ANSWERED
+                  </span>
+                  {runMode !== "week" && (
+                    <button
+                      className="primary-button quiz-submit-button"
+                      disabled={busy}
+                      onClick={finishQuiz}
+                      type="button"
+                    >
+                      Submit exam <CheckCircle2 size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
               {runMode !== "week" && (
                 <div className="exam-pass-note">
@@ -765,10 +770,14 @@ export default function QuizApp({ weeks }) {
                 {questions.map((item, i) => (
                   <button
                     key={item.id}
-                    className={`progress-step ${i === index ? "is-current" : ""} ${checkedResults[item.id] ? "is-answered" : ""}`}
+                    className={`progress-step ${i === index ? "is-current" : ""} ${checkedResults[item.id] || (runMode !== "week" && !showExamAnswers && hasAnswer(answers[item.id])) ? "is-answered" : ""}`}
                     onClick={() => setIndex(i)}
                     type="button"
-                    disabled={!checkedResults[item.id] || i === index}
+                    disabled={
+                      ((runMode === "week" || showExamAnswers) &&
+                        !checkedResults[item.id]) ||
+                      i === index
+                    }
                     aria-label={`Go to question ${i + 1}`}
                     aria-current={i === index ? "step" : undefined}
                   />
@@ -880,7 +889,16 @@ export default function QuizApp({ weeks }) {
                 >
                   <ArrowLeft size={15} /> Previous
                 </button>
-                {!questionFeedback ? (
+                {runMode !== "week" && !showExamAnswers ? (
+                  <button
+                    className="primary-button"
+                    disabled={index === questions.length - 1}
+                    onClick={() => setIndex(index + 1)}
+                    type="button"
+                  >
+                    Next question <ArrowRight size={15} />
+                  </button>
+                ) : !questionFeedback ? (
                   <button
                     className="primary-button"
                     disabled={busy || !hasAnswer(answers[question.id])}
