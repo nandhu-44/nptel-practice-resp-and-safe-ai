@@ -590,7 +590,12 @@ export default function QuizApp({ weeks }) {
                       {questionFeedback.isCorrect ? "Correct" : "Not quite"}
                     </div>
                     <span className="eyebrow">CORRECT ANSWER</span>
-                    <p>{questionFeedback.correctAnswersFullText.join(" · ")}</p>
+                    <p>
+                      <CorrectAnswers
+                        answers={questionFeedback.correctAnswersFullText}
+                        multiple={question.type === "MSQ"}
+                      />
+                    </p>
                     {questionFeedback.explanation !== "Explanation:" && (
                       <p className="explanation">
                         {questionFeedback.explanation}
@@ -755,7 +760,12 @@ export default function QuizApp({ weeks }) {
                       )}
                       <h3>{item.question}</h3>
                       <span className="eyebrow">CORRECT ANSWER</span>
-                      <p>{item.correctAnswersFullText.join(" · ")}</p>
+                      <p>
+                        <CorrectAnswers
+                          answers={item.correctAnswersFullText}
+                          multiple={item.type === "MSQ"}
+                        />
+                      </p>
                       {item.explanation !== "Explanation:" && (
                         <p className="explanation">{item.explanation}</p>
                       )}
@@ -900,6 +910,24 @@ function hasAnswer(value) {
   return Array.isArray(value)
     ? value.length > 0
     : String(value ?? "").trim().length > 0;
+}
+
+function formatCorrectAnswer(answer) {
+  return answer.replace(/^([a-z])\.\s*/i, "($1) ");
+}
+
+function CorrectAnswers({ answers, multiple }) {
+  if (multiple) {
+    return (
+      <span className="correct-answer-list multiple">
+        {answers.map((answer) => (
+          <span key={answer}>{formatCorrectAnswer(answer)}</span>
+        ))}
+      </span>
+    );
+  }
+
+  return answers.map(formatCorrectAnswer).join(" · ");
 }
 
 function shuffleList(list) {

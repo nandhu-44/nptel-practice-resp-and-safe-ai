@@ -63,6 +63,7 @@ function gradeQuestions(questions, answers) {
     return {
       id: question.id,
       week: question.week,
+      type: question.type,
       question: question.question,
       correctAnswers: answerKey.correct_answers,
       correctAnswersFullText: answerKey.correct_answers_full_text,

@@ -790,15 +790,18 @@ input:focus-visible {
   font-weight: 550;
 }
 .answer-feedback {
+  display: block;
   margin-top: 24px;
-  padding-top: 18px;
+  padding: 20px 0 8px;
   border-top: 1px solid #3a4235;
+  appearance: none;
+  text-decoration: none;
 }
 .feedback-heading {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 13px;
+  margin: 0 0 24px;
   color: var(--lime);
   font-size: 13px;
   font-weight: 600;
@@ -807,13 +810,24 @@ input:focus-visible {
   color: var(--red);
 }
 .answer-feedback > .eyebrow {
+  display: inline-block;
+  margin-top: 2px;
   font-size: 9px;
 }
 .answer-feedback > p {
-  margin: 7px 0 0;
+  margin: 13px 0 0;
+  padding-top: 2px;
   color: #d6dacd;
   font-size: 12px;
   line-height: 1.65;
+  text-decoration: none;
+}
+.correct-answer-list.multiple {
+  display: grid;
+  gap: 7px;
+}
+.correct-answer-list.multiple > span {
+  display: block;
 }
 .answer-feedback > p.explanation {
   margin-top: 13px;
