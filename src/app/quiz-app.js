@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   Check,
   CheckCircle2,
   GraduationCap,
@@ -23,6 +24,7 @@ export default function QuizApp({ weeks }) {
   const [weekNumber, setWeekNumber] = useState(1);
   const [view, setView] = useState("home");
   const [questions, setQuestions] = useState([]);
+  const [studyQuestions, setStudyQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [checkedResults, setCheckedResults] = useState({});
   const [index, setIndex] = useState(0);
@@ -98,6 +100,35 @@ export default function QuizApp({ weeks }) {
       setView("quiz");
     } catch (issue) {
       setError(issue.message || "Unable to load this quiz.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startStudy(targetWeek) {
+    const requestedWeek = Number(targetWeek);
+    if (
+      !Number.isInteger(requestedWeek) ||
+      !weeks.some((item) => Number(item.week) === requestedWeek)
+    ) {
+      setError("That weekly assignment is not available.");
+      setView("home");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setWeekNumber(requestedWeek);
+    setRunMode("week");
+    try {
+      const response = await fetch(`/api/quiz/${requestedWeek}?mode=study`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setStudyQuestions(data.questions);
+      setView("study");
+    } catch (issue) {
+      setError(issue.message || "Unable to load study answers.");
+      setView("home");
     } finally {
       setBusy(false);
     }
@@ -424,14 +455,90 @@ export default function QuizApp({ weeks }) {
                     <span className="assignment-question-count">
                       {item.totalQuestions} QUESTIONS
                     </span>
-                    <button
-                      className="assignment-action"
-                      disabled={busy}
-                      onClick={() => start(item.week)}
-                      type="button"
-                    >
-                      Take assignment <ArrowRight size={14} />
-                    </button>
+                    <div className="assignment-actions">
+                      <button
+                        className="assignment-action"
+                        disabled={busy}
+                        onClick={() => start(item.week)}
+                        type="button"
+                      >
+                        Take assignment <ArrowRight size={14} />
+                      </button>
+                      <button
+                        className="assignment-action study-action"
+                        disabled={busy}
+                        onClick={() => startStudy(item.week)}
+                        type="button"
+                      >
+                        Study answers <BookOpen size={14} />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+          {view === "study" && week && (
+            <>
+              <button className="back-link" onClick={goHome} type="button">
+                <ArrowLeft size={14} /> COURSE HOME
+              </button>
+              <div className="study-heading">
+                <div>
+                  <span className="eyebrow">
+                    WEEK {String(weekNumber).padStart(2, "0")} · QUICK REVISION
+                  </span>
+                  <h1>{week.title}</h1>
+                  <p>
+                    Questions, correct answers, and explanations for this week.
+                  </p>
+                </div>
+                <span className="study-count">
+                  {studyQuestions.length} QUESTIONS
+                </span>
+              </div>
+              {error && (
+                <p className="error-message" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="study-list">
+                {studyQuestions.map((item) => (
+                  <article className="study-item" key={item.id}>
+                    <div className="study-item-meta">
+                      Q{String(item.number).padStart(2, "0")}{" "}
+                      <span>{item.type}</span>
+                    </div>
+                    <h2>{item.question}</h2>
+                    {item.options?.length > 0 && (
+                      <ul className="study-options">
+                        {item.options.map((option) => (
+                          <li
+                            className={
+                              item.correctAnswers.includes(option.option)
+                                ? "is-correct"
+                                : ""
+                            }
+                            key={option.option}
+                          >
+                            <span>{option.option.toUpperCase()}</span>
+                            {option.text}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="study-answer">
+                      <span className="eyebrow">CORRECT ANSWER</span>
+                      <p>
+                        <CorrectAnswers
+                          answers={item.correctAnswersFullText}
+                          multiple={item.type === "MSQ"}
+                        />
+                      </p>
+                    </div>
+                    {item.explanation !== "Explanation:" && (
+                      <p className="explanation">{item.explanation}</p>
+                    )}
                   </article>
                 ))}
               </div>

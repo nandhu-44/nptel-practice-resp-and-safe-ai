@@ -1,16 +1,24 @@
 import {
   getWeekQuestions,
+  getWeekStudyQuestions,
   gradeQuestion,
   gradeWeek,
 } from "../../../../lib/quiz-data";
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   const { week: weekParam } = await params;
   const weekNumber = Number(weekParam);
   const questions = getWeekQuestions(weekNumber);
 
   if (!questions) {
     return Response.json({ error: "Week not found." }, { status: 404 });
+  }
+
+  if (new URL(request.url).searchParams.get("mode") === "study") {
+    return Response.json({
+      week: weekNumber,
+      questions: getWeekStudyQuestions(weekNumber),
+    });
   }
 
   return Response.json({

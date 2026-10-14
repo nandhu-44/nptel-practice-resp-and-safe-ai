@@ -28,6 +28,25 @@ export function getWeekQuestions(weekNumber) {
   );
 }
 
+export function getWeekStudyQuestions(weekNumber) {
+  const questions = getWeekQuestions(weekNumber);
+  if (!questions) return null;
+
+  return questions.map((question) => {
+    const answerKey = quizData.answer_key[question.id];
+    return {
+      id: question.id,
+      number: question.question_number,
+      type: question.type,
+      question: question.question,
+      options: question.options,
+      correctAnswers: answerKey.correct_answers,
+      correctAnswersFullText: answerKey.correct_answers_full_text,
+      explanation: answerKey.explanation,
+    };
+  });
+}
+
 export function getAllQuestions() {
   return quizData.quiz.flatMap((week) =>
     week.questions.map((question) => ({ ...question, week: week.week })),
