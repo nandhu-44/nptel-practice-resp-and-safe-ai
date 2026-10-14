@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
+const showExamAnswerSetting = false;
 
 export default function QuizApp({ weeks }) {
   const [weekNumber, setWeekNumber] = useState(1);
@@ -196,6 +197,7 @@ export default function QuizApp({ weeks }) {
   async function checkAnswer() {
     if (!question || answers[question.id] === undefined || questionFeedback)
       return;
+    if (runMode !== "week" && !showExamAnswers) return;
     setBusy(true);
     setError("");
     try {
@@ -1153,22 +1155,24 @@ export default function QuizApp({ weeks }) {
                     onChange={(event) => setShuffleWeeks(event.target.checked)}
                   />
                 </label>
-                <label className="setting-row">
-                  <span>
-                    <b>Show answers after each question</b>
-                    <small>
-                      Otherwise, answers and explanations appear in the final
-                      review
-                    </small>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={showExamAnswers}
-                    onChange={(event) =>
-                      setShowExamAnswers(event.target.checked)
-                    }
-                  />
-                </label>
+                {showExamAnswerSetting && (
+                  <label className="setting-row">
+                    <span>
+                      <b>Show answers after each question</b>
+                      <small>
+                        Otherwise, answers and explanations appear in the final
+                        review
+                      </small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={showExamAnswers}
+                      onChange={(event) =>
+                        setShowExamAnswers(event.target.checked)
+                      }
+                    />
+                  </label>
+                )}
               </div>
               <div className="exam-modal-footer">
                 <span>

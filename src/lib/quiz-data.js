@@ -14,6 +14,13 @@ const weekTitles = [
   "Governance and moral consistency",
 ];
 
+const allQuestions = quizData.quiz.flatMap((week) =>
+  week.questions.map((question) => ({ ...question, week: week.week })),
+);
+const questionsById = new Map(
+  allQuestions.map((question) => [question.id, question]),
+);
+
 export function getWeekCatalog() {
   return quizData.quiz.map((week) => ({
     week: week.week,
@@ -48,9 +55,7 @@ export function getWeekStudyQuestions(weekNumber) {
 }
 
 export function getAllQuestions() {
-  return quizData.quiz.flatMap((week) =>
-    week.questions.map((question) => ({ ...question, week: week.week })),
-  );
+  return allQuestions;
 }
 
 function gradeQuestions(questions, answers) {
@@ -105,17 +110,14 @@ function gradeQuestions(questions, answers) {
 }
 
 export function gradeQuestion(questionId, submitted) {
-  const question = getAllQuestions().find((item) => item.id === questionId);
+  const question = questionsById.get(questionId);
   if (!question) return null;
 
   return gradeQuestions([question], { [questionId]: submitted }).results[0];
 }
 
 export function gradeQuestionSet(questionIds, answers) {
-  const allQuestions = getAllQuestions();
-  const questions = questionIds.map((id) =>
-    allQuestions.find((question) => question.id === id),
-  );
+  const questions = questionIds.map((id) => questionsById.get(id));
   if (questions.some((question) => !question)) return null;
 
   return gradeQuestions(questions, answers);
