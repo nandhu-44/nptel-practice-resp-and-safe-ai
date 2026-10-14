@@ -339,6 +339,82 @@ input:focus-visible {
   color: #858c81;
   font-size: 10px;
 }
+.exam-history {
+  margin-top: 32px;
+}
+.exam-history-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 9px;
+}
+.exam-history-heading h2 {
+  margin: 6px 0 0;
+  font-size: 19px;
+  font-weight: 480;
+}
+.exam-history-heading > span,
+.exam-history-info > span,
+.exam-history-outcome,
+.exam-history-score small {
+  color: #788075;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+}
+.exam-history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 57px;
+  border-top: 1px solid var(--line);
+}
+.exam-history-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.exam-history-info {
+  display: grid;
+  gap: 5px;
+}
+.exam-history-info strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+.exam-history-outcome {
+  color: var(--red);
+}
+.exam-history-outcome.passed {
+  color: var(--lime);
+}
+.exam-history-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+}
+.exam-history-score small {
+  color: #858c81;
+}
+.exam-history-review {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid #3b4238;
+  border-radius: 4px;
+  background: transparent;
+  color: #c4cabe;
+  font-size: 10px;
+  cursor: pointer;
+}
+.exam-history-review:hover {
+  border-color: #657a4b;
+  color: var(--lime);
+}
 .home-assignment-heading {
   display: flex;
   align-items: end;
@@ -1420,6 +1496,23 @@ input:focus-visible {
   .home-exam-score {
     flex: none;
     text-align: left;
+  }
+  .exam-history-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px 12px;
+    padding: 10px 0;
+  }
+  .exam-history-outcome {
+    justify-self: end;
+  }
+  .exam-history-score {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .exam-history-review {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
   }
   .home-assignment-heading {
     margin-top: 29px;

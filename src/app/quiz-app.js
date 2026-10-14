@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
+const examHistoryStorageKey = "nptel-exam-history";
 
 export default function QuizApp({ weeks }) {
   const [weekNumber, setWeekNumber] = useState(1);
@@ -36,6 +37,7 @@ export default function QuizApp({ weeks }) {
   const [showExamAnswers, setShowExamAnswers] = useState(false);
   const [scores, setScores] = useState({});
   const [examScore, setExamScore] = useState(null);
+  const [examHistory, setExamHistory] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const week = weeks.find((item) => item.week === weekNumber);
@@ -48,6 +50,19 @@ export default function QuizApp({ weeks }) {
       if (stored) setScores(JSON.parse(stored));
       const storedExamScore = localStorage.getItem(examScoreStorageKey);
       if (storedExamScore) setExamScore(JSON.parse(storedExamScore));
+      const storedExamHistory = localStorage.getItem(examHistoryStorageKey);
+      if (storedExamHistory) {
+        const parsedHistory = JSON.parse(storedExamHistory);
+        if (Array.isArray(parsedHistory)) {
+          setExamHistory(
+            parsedHistory.filter(
+              (attempt) =>
+                Array.isArray(attempt?.questions) &&
+                Array.isArray(attempt?.result?.results),
+            ),
+          );
+        }
+      }
     } catch {
       localStorage.removeItem(storageKey);
     }
@@ -245,11 +260,28 @@ export default function QuizApp({ weeks }) {
           total: data.total,
           mode: runMode,
         };
+        const attempt = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          completedAt: new Date().toISOString(),
+          ...latestExamScore,
+          questions: questions.map(({ id, options }) => ({ id, options })),
+          result: data,
+        };
+        const updatedExamHistory = [attempt, ...examHistory];
+        setExamHistory(updatedExamHistory);
         setExamScore(latestExamScore);
-        localStorage.setItem(
-          examScoreStorageKey,
-          JSON.stringify(latestExamScore),
-        );
+        try {
+          localStorage.setItem(
+            examScoreStorageKey,
+            JSON.stringify(latestExamScore),
+          );
+          localStorage.setItem(
+            examHistoryStorageKey,
+            JSON.stringify(updatedExamHistory),
+          );
+        } catch {
+          setError("This attempt could not be saved in browser storage.");
+        }
       }
       setView("results");
     } catch (issue) {
@@ -257,6 +289,17 @@ export default function QuizApp({ weeks }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function openExamReview(attempt) {
+    setQuestions(attempt.questions);
+    setResult(attempt.result);
+    setRunMode(attempt.mode);
+    setIndex(0);
+    setAnswers({});
+    setCheckedResults({});
+    setError("");
+    setView("results");
   }
 
   function chooseWeek(number) {
@@ -432,6 +475,54 @@ export default function QuizApp({ weeks }) {
                   </button>
                 </div>
               </section>
+              {examHistory.length > 0 && (
+                <section
+                  className="exam-history"
+                  aria-labelledby="exam-history-title"
+                >
+                  <div className="exam-history-heading">
+                    <div>
+                      <span className="eyebrow">EXAM ARCHIVE</span>
+                      <h2 id="exam-history-title">Past exams</h2>
+                    </div>
+                    <span>{examHistory.length} ATTEMPTS</span>
+                  </div>
+                  <div className="exam-history-list">
+                    {examHistory.map((attempt) => (
+                      <article className="exam-history-row" key={attempt.id}>
+                        <div className="exam-history-info">
+                          <strong>
+                            {attempt.mode === "random50"
+                              ? "Random 50"
+                              : "Full exam"}
+                          </strong>
+                          <span>
+                            {new Date(attempt.completedAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <span
+                          className={`exam-history-outcome ${attempt.result.passed ? "passed" : "failed"}`}
+                        >
+                          {attempt.result.passed ? "PASSED" : "NOT PASSED"}
+                        </span>
+                        <span className="exam-history-score">
+                          {attempt.percentage}%
+                          <small>
+                            {attempt.score}/{attempt.total} correct
+                          </small>
+                        </span>
+                        <button
+                          className="exam-history-review"
+                          onClick={() => openExamReview(attempt)}
+                          type="button"
+                        >
+                          <BookOpen size={14} /> Review
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
               <div className="home-assignment-heading">
                 <div>
                   <span className="eyebrow">11 WEEKLY ASSIGNMENTS</span>
