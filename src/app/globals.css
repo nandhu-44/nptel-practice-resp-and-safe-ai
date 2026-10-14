@@ -319,6 +319,26 @@ input:focus-visible {
 .home-exam .primary-button {
   flex: none;
 }
+.home-exam-actions {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.home-exam-score {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+}
+.home-exam-score strong {
+  color: var(--lime);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 22px;
+  font-weight: 450;
+}
+.home-exam-score small {
+  color: #858c81;
+  font-size: 10px;
+}
 .home-assignment-heading {
   display: flex;
   align-items: end;
@@ -1271,8 +1291,20 @@ input:focus-visible {
     gap: 17px;
     padding: 19px 17px;
   }
-  .home-exam .primary-button {
+  .home-exam-actions {
     width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .home-exam .primary-button {
+    width: auto;
+    flex: 1;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+  .home-exam-score {
+    flex: none;
+    text-align: left;
   }
   .home-assignment-heading {
     margin-top: 29px;

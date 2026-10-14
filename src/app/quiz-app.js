@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from "react";
 
 const storageKey = "nptel-quiz-progress";
+const examScoreStorageKey = "nptel-exam-score";
 
 export default function QuizApp({ weeks }) {
   const [weekNumber, setWeekNumber] = useState(1);
@@ -31,7 +32,9 @@ export default function QuizApp({ weeks }) {
   const [examType, setExamType] = useState("full");
   const [shuffleOptions, setShuffleOptions] = useState(false);
   const [shuffleWeeks, setShuffleWeeks] = useState(false);
+  const [showExamAnswers, setShowExamAnswers] = useState(false);
   const [scores, setScores] = useState({});
+  const [examScore, setExamScore] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const week = weeks.find((item) => item.week === weekNumber);
@@ -42,6 +45,8 @@ export default function QuizApp({ weeks }) {
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) setScores(JSON.parse(stored));
+      const storedExamScore = localStorage.getItem(examScoreStorageKey);
+      if (storedExamScore) setExamScore(JSON.parse(storedExamScore));
     } catch {
       localStorage.removeItem(storageKey);
     }
@@ -146,6 +151,13 @@ export default function QuizApp({ weeks }) {
   async function checkAnswer() {
     if (!question || answers[question.id] === undefined || questionFeedback)
       return;
+    if (runMode !== "week" && !showExamAnswers) {
+      setCheckedResults((old) => ({
+        ...old,
+        [question.id]: { submitted: true },
+      }));
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -196,6 +208,18 @@ export default function QuizApp({ weeks }) {
           localStorage.setItem(storageKey, JSON.stringify(next));
           return next;
         });
+      } else {
+        const latestExamScore = {
+          percentage: data.percentage,
+          score: data.score,
+          total: data.total,
+          mode: runMode,
+        };
+        setExamScore(latestExamScore);
+        localStorage.setItem(
+          examScoreStorageKey,
+          JSON.stringify(latestExamScore),
+        );
       }
       setView("results");
     } catch (issue) {
@@ -328,7 +352,8 @@ export default function QuizApp({ weeks }) {
                   <h1>Responsible &amp; Safe AI Systems</h1>
                   <p>
                     Work through weekly assignments or take a full course exam.
-                    Your answer and explanation appear after each check.
+                    Choose whether exam answers appear after each question or in
+                    the final review.
                   </p>
                 </div>
                 <div className="home-progress">
@@ -357,14 +382,25 @@ export default function QuizApp({ weeks }) {
                     Choose the full 131-question exam or a random set of 50.
                   </p>
                 </div>
-                <button
-                  className="primary-button"
-                  disabled={busy}
-                  onClick={() => setExamDialogOpen(true)}
-                  type="button"
-                >
-                  <Shuffle size={15} /> Take exam <ArrowRight size={15} />
-                </button>
+                <div className="home-exam-actions">
+                  {examScore && (
+                    <div className="home-exam-score">
+                      <span className="eyebrow">LAST EXAM SCORE</span>
+                      <strong>{examScore.percentage}%</strong>
+                      <small>
+                        {examScore.score}/{examScore.total} correct
+                      </small>
+                    </div>
+                  )}
+                  <button
+                    className="primary-button"
+                    disabled={busy}
+                    onClick={() => setExamDialogOpen(true)}
+                    type="button"
+                  >
+                    <Shuffle size={15} /> Take exam <ArrowRight size={15} />
+                  </button>
+                </div>
               </section>
               <div className="home-assignment-heading">
                 <div>
@@ -601,36 +637,37 @@ export default function QuizApp({ weeks }) {
                     />
                   </label>
                 )}
-                {questionFeedback && (
-                  <output
-                    className={`answer-feedback ${questionFeedback.isCorrect ? "is-correct" : "is-incorrect"}`}
-                    aria-live="polite"
-                  >
-                    <div className="feedback-heading">
-                      {questionFeedback.isCorrect ? (
-                        <CheckCircle2 size={16} />
-                      ) : (
-                        <X size={16} />
-                      )}
-                      {questionFeedback.isCorrect ? "Correct" : "Not quite"}
-                    </div>
-                    <span className="eyebrow">CORRECT ANSWER</span>
-                    <p>
-                      <CorrectAnswers
-                        answers={getCorrectAnswerTexts(
-                          question,
-                          questionFeedback,
+                {questionFeedback &&
+                  (runMode === "week" || showExamAnswers) && (
+                    <output
+                      className={`answer-feedback ${questionFeedback.isCorrect ? "is-correct" : "is-incorrect"}`}
+                      aria-live="polite"
+                    >
+                      <div className="feedback-heading">
+                        {questionFeedback.isCorrect ? (
+                          <CheckCircle2 size={16} />
+                        ) : (
+                          <X size={16} />
                         )}
-                        multiple={question.type === "MSQ"}
-                      />
-                    </p>
-                    {questionFeedback.explanation !== "Explanation:" && (
-                      <p className="explanation">
-                        {questionFeedback.explanation}
+                        {questionFeedback.isCorrect ? "Correct" : "Not quite"}
+                      </div>
+                      <span className="eyebrow">CORRECT ANSWER</span>
+                      <p>
+                        <CorrectAnswers
+                          answers={getCorrectAnswerTexts(
+                            question,
+                            questionFeedback,
+                          )}
+                          multiple={question.type === "MSQ"}
+                        />
                       </p>
-                    )}
-                  </output>
-                )}
+                      {questionFeedback.explanation !== "Explanation:" && (
+                        <p className="explanation">
+                          {questionFeedback.explanation}
+                        </p>
+                      )}
+                    </output>
+                  )}
               </article>
               {error && (
                 <p className="error-message" role="alert">
@@ -653,7 +690,11 @@ export default function QuizApp({ weeks }) {
                     onClick={checkAnswer}
                     type="button"
                   >
-                    {busy ? "Checking answer..." : "Submit and check"}{" "}
+                    {busy
+                      ? "Checking answer..."
+                      : runMode !== "week" && !showExamAnswers
+                        ? "Submit answer"
+                        : "Submit and check"}{" "}
                     <CheckCircle2 size={15} />
                   </button>
                 ) : index < questions.length - 1 ? (
@@ -891,6 +932,22 @@ export default function QuizApp({ weeks }) {
                     checked={examType === "random50" || shuffleWeeks}
                     disabled={examType === "random50"}
                     onChange={(event) => setShuffleWeeks(event.target.checked)}
+                  />
+                </label>
+                <label className="setting-row">
+                  <span>
+                    <b>Show answers after each question</b>
+                    <small>
+                      Otherwise, answers and explanations appear in the final
+                      review
+                    </small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={showExamAnswers}
+                    onChange={(event) =>
+                      setShowExamAnswers(event.target.checked)
+                    }
                   />
                 </label>
               </div>
