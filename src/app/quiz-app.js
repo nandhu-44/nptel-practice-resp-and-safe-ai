@@ -68,6 +68,15 @@ export default function QuizApp({ weeks }) {
   }, [examDialogOpen]);
 
   async function start(targetWeek = weekNumber) {
+    const requestedWeek = Number(targetWeek);
+    if (
+      !Number.isInteger(requestedWeek) ||
+      !weeks.some((item) => Number(item.week) === requestedWeek)
+    ) {
+      setError("That weekly assignment is not available.");
+      setView("home");
+      return;
+    }
     setBusy(true);
     setError("");
     setAnswers({});
@@ -75,9 +84,9 @@ export default function QuizApp({ weeks }) {
     setResult(null);
     setIndex(0);
     setRunMode("week");
-    setWeekNumber(targetWeek);
+    setWeekNumber(requestedWeek);
     try {
-      const response = await fetch(`/api/quiz/${targetWeek}`);
+      const response = await fetch(`/api/quiz/${requestedWeek}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setQuestions(data.questions);
@@ -191,7 +200,16 @@ export default function QuizApp({ weeks }) {
   }
 
   function chooseWeek(number) {
-    setWeekNumber(number);
+    const requestedWeek = Number(number);
+    if (
+      !Number.isInteger(requestedWeek) ||
+      !weeks.some((item) => Number(item.week) === requestedWeek)
+    ) {
+      setError("That weekly assignment is not available.");
+      setView("home");
+      return;
+    }
+    setWeekNumber(requestedWeek);
     setView("overview");
     setRunMode("week");
     setResult(null);
@@ -377,7 +395,7 @@ export default function QuizApp({ weeks }) {
               </div>
             </>
           )}
-          {view === "overview" && (
+          {view === "overview" && week && (
             <>
               <div className="section-kicker">— &nbsp; WEEKLY ASSIGNMENT</div>
               <div className="overview-heading">
@@ -415,7 +433,7 @@ export default function QuizApp({ weeks }) {
                   <button
                     className="primary-button start-button"
                     disabled={busy}
-                    onClick={start}
+                    onClick={() => start()}
                     type="button"
                   >
                     {busy
@@ -884,7 +902,7 @@ export default function QuizApp({ weeks }) {
             {view === "home"
               ? `${weeks.length} WEEKS / 131 QUESTIONS`
               : runMode === "week"
-                ? `WEEK ${String(weekNumber).padStart(2, "0")} / ${week.totalQuestions} QUESTIONS`
+                ? `WEEK ${String(weekNumber).padStart(2, "0")} / ${week?.totalQuestions ?? 0} QUESTIONS`
                 : `${questions.length} QUESTION EXAM`}
           </span>
         </footer>
