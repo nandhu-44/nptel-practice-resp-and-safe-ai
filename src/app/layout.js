@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "NPTEL Quiz | Responsible & Safe AI Systems",
   description: "Week-based NPTEL quizzes for Responsible & Safe AI Systems.",
+  icons: {
+    icon: "/image.png",
+  },
 };
 
 export default function RootLayout({ children }) {
