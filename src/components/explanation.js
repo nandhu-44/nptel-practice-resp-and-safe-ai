@@ -75,7 +75,7 @@ function LecturePreview({ source, text, onClose }) {
         </header>
         <div className="lecture-preview-video">
           <iframe
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen; web-share"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
             src={embedUrl(source)}

@@ -1243,10 +1243,16 @@ button:disabled {
   max-height: calc(100dvh - 40px);
   padding: 28px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-md);
+}
+/* Lock page scroll while a modal is open */
+html:has(dialog[open]),
+html:has(.modal-backdrop) {
+  overflow: hidden;
 }
 .exam-modal-header {
   display: flex;
@@ -1837,7 +1843,8 @@ button:disabled {
   max-height: calc(100dvh - 32px);
   margin: auto;
   padding: 0;
-  overflow: auto;
+  overflow: hidden;
+  overscroll-behavior: contain;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -1852,9 +1859,14 @@ button:disabled {
   animation: page-in 0.25s ease both;
 }
 .lecture-preview-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  max-height: calc(100dvh - 34px);
   padding: 22px;
+}
+.lecture-preview-panel > * {
+  flex: none;
 }
 .lecture-preview-header {
   display: flex;
@@ -1882,6 +1894,10 @@ button:disabled {
   border: 0;
 }
 .lecture-preview-text {
+  flex: 1 1 auto !important;
+  min-height: 3em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-left: 16px;
   border-left: 3px solid var(--accent);
   color: var(--text-2);
@@ -1894,4 +1910,32 @@ button:disabled {
   align-items: center;
   gap: 4px;
   font-size: 14px;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Minimal scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--line-strong);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--text-3);
+  background-clip: padding-box;
 }
