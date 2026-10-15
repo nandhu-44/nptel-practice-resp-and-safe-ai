@@ -259,7 +259,11 @@ export default function QuizApp({ weeks }) {
           id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
           completedAt: new Date().toISOString(),
           ...latestExamScore,
-          questions: questions.map(({ id, options }) => ({ id, options })),
+          questions: questions.map(({ id, number, options }) => ({
+            id,
+            number,
+            options,
+          })),
           result: data,
         };
         const updatedExamHistory = [attempt, ...examHistory];
@@ -1036,47 +1040,70 @@ export default function QuizApp({ weeks }) {
                 <span>{result.total} ITEMS</span>
               </div>
               <div className="review-list">
-                {result.results.map((item, i) => (
-                  <article
-                    className={`review-item ${item.isCorrect ? "correct" : "incorrect"}`}
-                    key={item.id}
-                  >
-                    <span className="review-number">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <div className="review-status">
-                        {item.isCorrect ? (
-                          <CheckCircle2 size={13} />
-                        ) : (
-                          <X size={13} />
-                        )}
-                        {item.isCorrect ? "CORRECT" : "INCORRECT"}
-                      </div>
-                      {runMode !== "week" && (
-                        <span className="eyebrow review-week">
-                          WEEK {String(item.week).padStart(2, "0")}
-                        </span>
-                      )}
-                      <h3>{item.question}</h3>
-                      <span className="eyebrow">CORRECT ANSWER</span>
-                      <p>
-                        <CorrectAnswers
-                          answers={getCorrectAnswerTexts(
-                            questions.find(
-                              (question) => question.id === item.id,
-                            ),
-                            item,
+                {result.results.map((item, i) => {
+                  const reviewQuestion = questions.find(
+                    (question) => question.id === item.id,
+                  );
+                  const questionNumber =
+                    reviewQuestion?.number ??
+                    Number(item.id.match(/Q(\d+)$/)?.[1]);
+                  return (
+                    <article
+                      className={`review-item ${item.isCorrect ? "correct" : "incorrect"}`}
+                      key={item.id}
+                    >
+                      <span className="review-number">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <div className="review-status">
+                          {item.isCorrect ? (
+                            <CheckCircle2 size={13} />
+                          ) : (
+                            <X size={13} />
                           )}
-                          multiple={item.type === "MSQ"}
-                        />
-                      </p>
-                      {item.explanation !== "Explanation:" && (
-                        <p className="explanation">{item.explanation}</p>
-                      )}
-                    </div>
-                  </article>
-                ))}
+                          {item.isCorrect ? "CORRECT" : "INCORRECT"}
+                        </div>
+                        {runMode !== "week" && (
+                          <span className="eyebrow review-week">
+                            WEEK {String(item.week).padStart(2, "0")} · QUESTION{" "}
+                            {String(questionNumber).padStart(2, "0")}
+                          </span>
+                        )}
+                        <h3>{item.question}</h3>
+                        {runMode !== "week" && (
+                          <>
+                            <span className="eyebrow">YOUR ANSWER</span>
+                            <p
+                              className={`review-user-answer ${item.isCorrect ? "is-correct" : "is-incorrect"}`}
+                            >
+                              <SubmittedAnswer
+                                answers={getSubmittedAnswerTexts(
+                                  reviewQuestion,
+                                  item.submitted,
+                                )}
+                                multiple={item.type === "MSQ"}
+                              />
+                            </p>
+                          </>
+                        )}
+                        <span className="eyebrow">CORRECT ANSWER</span>
+                        <p>
+                          <CorrectAnswers
+                            answers={getCorrectAnswerTexts(
+                              reviewQuestion,
+                              item,
+                            )}
+                            multiple={item.type === "MSQ"}
+                          />
+                        </p>
+                        {item.explanation !== "Explanation:" && (
+                          <p className="explanation">{item.explanation}</p>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </>
           )}
@@ -1250,6 +1277,16 @@ function getCorrectAnswerTexts(question, result) {
     .map((option) => `${option.option}. ${option.text}`);
 }
 
+function getSubmittedAnswerTexts(question, submitted) {
+  if (!hasAnswer(submitted)) return [];
+  if (!question?.options?.length) return [String(submitted)];
+
+  const selected = new Set(Array.isArray(submitted) ? submitted : [submitted]);
+  return question.options
+    .filter((option) => selected.has(option.sourceOption ?? option.option))
+    .map((option) => `${option.option}. ${option.text}`);
+}
+
 function CorrectAnswers({ answers, multiple }) {
   if (multiple) {
     return (
@@ -1262,6 +1299,12 @@ function CorrectAnswers({ answers, multiple }) {
   }
 
   return answers.map(formatCorrectAnswer).join(" · ");
+}
+
+function SubmittedAnswer({ answers, multiple }) {
+  if (!answers.length) return "Not answered.";
+
+  return <CorrectAnswers answers={answers} multiple={multiple} />;
 }
 
 function shuffleList(list) {

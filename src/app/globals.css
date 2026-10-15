@@ -1370,6 +1370,16 @@ input:focus-visible {
   font-size: 12px;
   line-height: 1.6;
 }
+.review-item > div > p.review-user-answer {
+  margin-bottom: 12px;
+  color: #c4cabe;
+}
+.review-item > div > p.review-user-answer.is-correct {
+  color: var(--lime);
+}
+.review-item > div > p.review-user-answer.is-incorrect {
+  color: var(--red);
+}
 .review-item > div > p.explanation {
   margin-top: 10px;
   padding-top: 9px;
