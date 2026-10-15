@@ -317,6 +317,7 @@ input:focus-visible {
   line-height: 1.6;
 }
 .home-exam .primary-button {
+  width: 186px;
   flex: none;
 }
 .home-exam-actions {
@@ -626,7 +627,7 @@ input:focus-visible {
   background: #20241f;
 }
 .start-button {
-  min-width: 186px;
+  width: 186px;
   margin-top: 25px;
 }
 .overview-actions {
