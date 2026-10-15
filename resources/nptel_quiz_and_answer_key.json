@@ -1747,11 +1747,11 @@
           "id": "W06-Q09",
           "question_number": 9,
           "type": "MCQ",
-          "question": "According to Cynthia Dwork's definition of ε-differential privacy, for all neighbouring datasets 𝑋 and 𝑋', the probability that a mechanism 𝑀 on 𝑋 generates an output in subset 𝑆 divided by the probability that a mechanism 𝑀 on 𝑋' generates an output in subset 𝑆 is at most: ε",
+          "question": "According to Cynthia Dwork's definition of ε-differential privacy, for all neighbouring datasets 𝑋 and 𝑋', the probability that a mechanism 𝑀 on 𝑋 generates an output in subset 𝑆 divided by the probability that a mechanism 𝑀 on 𝑋' generates an output in subset 𝑆 is at most:",
           "options": [
             {
               "option": "a",
-              "text": "𝑒"
+              "text": "𝑒ᵋ"
             },
             {
               "option": "b",
@@ -1759,11 +1759,11 @@
             },
             {
               "option": "c",
-              "text": "1/ε 𝑒"
+              "text": "1/ε"
             },
             {
               "option": "d",
-              "text": "ε"
+              "text": "εᵉ"
             }
           ],
           "input_prompt": null
@@ -4281,8 +4281,8 @@
       "question_number": 9,
       "type": "MCQ",
       "correct_answers": ["a"],
-      "correct_answers_full_text": ["a. 𝑒"],
-      "explanation": "Explanation: Differential Privacy [9:57-15:02] - A mechanism 𝑀 is said to be ε 𝑃𝑟(𝑀(𝑋) ϵ 𝑆)ε -differential private if ≤𝑒. 𝑃𝑟(𝑀(𝑋') ϵ 𝑆)",
+      "correct_answers_full_text": ["a. 𝑒ᵋ"],
+      "explanation": "Explanation: Differential Privacy [9:57-15:02] - A mechanism 𝑀 is ε-differentially private if, for every pair of neighbouring datasets 𝑋 and 𝑋' and every output subset 𝑆, Pr[𝑀(𝑋) ∈ 𝑆] / Pr[𝑀(𝑋') ∈ 𝑆] ≤ 𝑒ᵋ.",
       "source_verification": {
         "font_color": "red",
         "highlight_color": null
