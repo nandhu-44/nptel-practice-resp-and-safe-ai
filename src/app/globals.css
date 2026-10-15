@@ -629,6 +629,11 @@ input:focus-visible {
   min-width: 186px;
   margin-top: 25px;
 }
+.overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .spinner {
   width: 14px;
   height: 14px;

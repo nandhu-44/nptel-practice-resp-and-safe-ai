@@ -664,23 +664,33 @@ export default function QuizApp({ weeks }) {
                       {error}
                     </p>
                   )}
-                  <button
-                    className="primary-button start-button"
-                    disabled={busy}
-                    onClick={() => start()}
-                    type="button"
-                  >
-                    {busy
-                      ? "Loading quiz..."
-                      : scores[weekNumber] !== undefined
-                        ? "Retake assignment"
-                        : "Begin assignment"}
-                    {busy ? (
-                      <span className="spinner" />
-                    ) : (
-                      <ArrowUpRight size={16} />
-                    )}
-                  </button>
+                  <div className="overview-actions">
+                    <button
+                      className="primary-button start-button"
+                      disabled={busy}
+                      onClick={() => start()}
+                      type="button"
+                    >
+                      {busy
+                        ? "Loading quiz..."
+                        : scores[weekNumber] !== undefined
+                          ? "Retake assignment"
+                          : "Begin assignment"}
+                      {busy ? (
+                        <span className="spinner" />
+                      ) : (
+                        <ArrowUpRight size={16} />
+                      )}
+                    </button>
+                    <button
+                      className="secondary-button start-button"
+                      disabled={busy}
+                      onClick={() => startStudy(weekNumber)}
+                      type="button"
+                    >
+                      Study answers <BookOpen size={15} />
+                    </button>
+                  </div>
                 </div>
                 <div className="overview-stats">
                   <div>
