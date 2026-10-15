@@ -1,4 +1,5 @@
 import quizData from "../../resources/nptel_quiz_and_answer_key.json";
+import { parseExplanation } from "./explanations";
 
 const weekTitles = [
   "AI safety and systemic risk",
@@ -50,6 +51,7 @@ export function getWeekStudyQuestions(weekNumber) {
       correctAnswers: answerKey.correct_answers,
       correctAnswersFullText: answerKey.correct_answers_full_text,
       explanation: answerKey.explanation,
+      explanationDetail: parseExplanation(answerKey.explanation),
     };
   });
 }
@@ -76,11 +78,11 @@ function gradeQuestions(questions, answers) {
         correct.length === 1 && correct[0] === String(submitted).toLowerCase();
     } else {
       const expected = Number(correct[0]);
-      const actual = Number(
-        String(submitted ?? "")
-          .trim()
-          .replaceAll(",", ""),
-      );
+      const raw = String(submitted ?? "")
+        .trim()
+        .replaceAll(",", "");
+      // Number("") is 0, so a blank answer must not be graded as zero.
+      const actual = raw === "" ? Number.NaN : Number(raw);
       isCorrect = Number.isFinite(actual) && actual === expected;
     }
 
@@ -92,6 +94,7 @@ function gradeQuestions(questions, answers) {
       correctAnswers: answerKey.correct_answers,
       correctAnswersFullText: answerKey.correct_answers_full_text,
       explanation: answerKey.explanation,
+      explanationDetail: parseExplanation(answerKey.explanation),
       isCorrect,
       submitted: submitted ?? null,
     };
@@ -127,4 +130,21 @@ export function gradeWeek(weekNumber, answers) {
   const questions = getWeekQuestions(weekNumber);
   if (!questions) return null;
   return gradeQuestions(questions, answers);
+}
+
+export function getFlashcards() {
+  return allQuestions.map((question) => {
+    const answerKey = quizData.answer_key[question.id];
+    return {
+      id: question.id,
+      week: question.week,
+      number: question.question_number,
+      type: question.type,
+      question: question.question,
+      options: question.options ?? null,
+      correctAnswers: answerKey.correct_answers,
+      answerTexts: answerKey.correct_answers_full_text,
+      explanationDetail: parseExplanation(answerKey.explanation),
+    };
+  });
 }
