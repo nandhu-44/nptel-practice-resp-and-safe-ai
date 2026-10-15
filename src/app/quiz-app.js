@@ -8,17 +8,23 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
-  GraduationCap,
   House,
+  Layers,
+  Moon,
   RotateCcw,
   Shuffle,
+  Sun,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import Explanation from "../components/explanation";
+import Flashcards from "./flashcards";
 
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
+const themeStorageKey = "nptel-theme";
+const maxExamHistory = 20;
 const showExamAnswerSetting = false;
 
 export default function QuizApp({ weeks }) {
@@ -39,11 +45,29 @@ export default function QuizApp({ weeks }) {
   const [scores, setScores] = useState({});
   const [examScore, setExamScore] = useState(null);
   const [examHistory, setExamHistory] = useState([]);
+  const [theme, setTheme] = useState("dark");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const week = weeks.find((item) => item.week === weekNumber);
   const question = questions[index];
   const questionFeedback = question ? checkedResults[question.id] : null;
+
+  useEffect(() => {
+    setTheme(
+      document.documentElement.dataset.theme === "light" ? "light" : "dark",
+    );
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem(themeStorageKey, next);
+    } catch {
+      // Theme still applies for this session.
+    }
+  }
 
   useEffect(() => {
     try {
@@ -75,7 +99,7 @@ export default function QuizApp({ weeks }) {
         particleCount: 100,
         spread: 65,
         origin: { y: 0.68 },
-        colors: ["#c9f27a", "#f5b85c", "#f4f1e8", "#80d8b0"],
+        colors: ["#c4578f", "#e8a15b", "#faf9f7", "#7fcf9f"],
       });
     }
   }, [view, result, runMode]);
@@ -243,11 +267,13 @@ export default function QuizApp({ weeks }) {
       if (!response.ok) throw new Error(data.error);
       setResult(data);
       if (runMode === "week") {
-        setScores((old) => {
-          const next = { ...old, [weekNumber]: data.percentage };
-          localStorage.setItem(storageKey, JSON.stringify(next));
-          return next;
-        });
+        const nextScores = { ...scores, [weekNumber]: data.percentage };
+        setScores(nextScores);
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(nextScores));
+        } catch {
+          setError("This score could not be saved in browser storage.");
+        }
       } else {
         const latestExamScore = {
           percentage: data.percentage,
@@ -266,7 +292,10 @@ export default function QuizApp({ weeks }) {
           })),
           result: data,
         };
-        const updatedExamHistory = [attempt, ...examHistory];
+        const updatedExamHistory = [attempt, ...examHistory].slice(
+          0,
+          maxExamHistory,
+        );
         setExamHistory(updatedExamHistory);
         setExamScore(latestExamScore);
         try {
@@ -317,6 +346,12 @@ export default function QuizApp({ weeks }) {
     setResult(null);
     setError("");
   }
+  function openFlashcards() {
+    setView("flashcards");
+    setRunMode("week");
+    setResult(null);
+    setError("");
+  }
   function goHome() {
     setView("home");
     setRunMode("week");
@@ -345,16 +380,20 @@ export default function QuizApp({ weeks }) {
       )
     : 0;
   const answered = Object.keys(checkedResults).length;
+  const totalQuestions = weeks.reduce(
+    (sum, item) => sum + item.totalQuestions,
+    0,
+  );
 
   return (
     <div className="app-shell">
       <header className="mobile-header">
-        <Brand />
+        <Brand onClick={goHome} />
         <span>RESPONSIBLE &amp; SAFE AI SYSTEMS</span>
       </header>
       <aside className="sidebar">
         <div className="desktop-brand">
-          <Brand />
+          <Brand onClick={goHome} />
         </div>
         <div className="sidebar-course">
           <span className="eyebrow">COURSE</span>
@@ -372,16 +411,27 @@ export default function QuizApp({ weeks }) {
         >
           <House size={14} /> Course home
         </button>
+        <button
+          className={`home-link ${view === "flashcards" ? "is-active" : ""}`}
+          onClick={openFlashcards}
+          type="button"
+        >
+          <Layers size={14} /> Flashcards
+        </button>
         <nav className="week-navigation" aria-label="Quiz weeks">
           <span className="eyebrow week-nav-label">ASSIGNMENTS</span>
           {weeks.map((item) => (
             <button
-              className={`week-link ${view !== "home" && weekNumber === item.week ? "is-active" : ""}`}
+              className={`week-link ${view !== "home" && view !== "flashcards" && weekNumber === item.week ? "is-active" : ""}`}
               key={item.week}
               onClick={() => chooseWeek(item.week)}
               type="button"
               aria-current={
-                view !== "home" && weekNumber === item.week ? "page" : undefined
+                view !== "home" &&
+                view !== "flashcards" &&
+                weekNumber === item.week
+                  ? "page"
+                  : undefined
               }
             >
               <span className="week-number">
@@ -394,9 +444,6 @@ export default function QuizApp({ weeks }) {
             </button>
           ))}
         </nav>
-        <div className="sidebar-footer">
-          <i className="status-dot" /> Local quiz set <span>131 Q</span>
-        </div>
       </aside>
       <main className="main-panel">
         <div className="topbar">
@@ -404,14 +451,23 @@ export default function QuizApp({ weeks }) {
             RESPONSIBLE &amp; SAFE AI SYSTEMS <span>/</span>{" "}
             {view === "home"
               ? "COURSE HOME"
-              : runMode === "week"
-                ? `WEEK ${String(weekNumber).padStart(2, "0")}`
-                : runMode === "random50"
-                  ? "RANDOM 50 EXAM"
-                  : "FULL EXAM"}
+              : view === "flashcards"
+                ? "FLASHCARDS"
+                : runMode === "week"
+                  ? `WEEK ${String(weekNumber).padStart(2, "0")}`
+                  : runMode === "random50"
+                    ? "RANDOM 50 EXAM"
+                    : "FULL EXAM"}
           </div>
           <span>
-            <i className="status-dot" /> COURSE MATERIAL
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              type="button"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
           </span>
         </div>
         <section className="workspace page-enter" key={`${weekNumber}-${view}`}>
@@ -451,7 +507,8 @@ export default function QuizApp({ weeks }) {
                   <span className="eyebrow">FULL COURSE · WEEKS 01—11</span>
                   <h2>Take an exam</h2>
                   <p>
-                    Choose the full 131-question exam or a random set of 50.
+                    Choose the full {totalQuestions}-question exam or a random
+                    set of 50.
                   </p>
                 </div>
                 <div className="home-exam-actions">
@@ -471,6 +528,26 @@ export default function QuizApp({ weeks }) {
                     type="button"
                   >
                     <Shuffle size={15} /> Take exam <ArrowRight size={15} />
+                  </button>
+                </div>
+              </section>
+              <section className="home-exam home-flashcards">
+                <div>
+                  <span className="eyebrow">ACTIVE RECALL</span>
+                  <h2>Flashcards</h2>
+                  <p>
+                    Flip through every question as a card, track what you know,
+                    and get judged by cats.
+                  </p>
+                </div>
+                <div className="home-exam-actions">
+                  <button
+                    className="primary-button"
+                    onClick={openFlashcards}
+                    type="button"
+                  >
+                    <Layers size={15} /> Open flashcards{" "}
+                    <ArrowRight size={15} />
                   </button>
                 </div>
               </section>
@@ -567,6 +644,9 @@ export default function QuizApp({ weeks }) {
               </div>
             </>
           )}
+          {view === "flashcards" && (
+            <Flashcards weeks={weeks} onHome={goHome} />
+          )}
           {view === "study" && week && (
             <>
               <button className="back-link" onClick={goHome} type="button">
@@ -625,9 +705,10 @@ export default function QuizApp({ weeks }) {
                         />
                       </p>
                     </div>
-                    {item.explanation !== "Explanation:" && (
-                      <p className="explanation">{item.explanation}</p>
-                    )}
+                    <Explanation
+                      detail={item.explanationDetail}
+                      raw={item.explanation}
+                    />
                   </article>
                 ))}
               </div>
@@ -733,13 +814,16 @@ export default function QuizApp({ weeks }) {
               <button
                 className="back-link"
                 onClick={() => {
-                  setView("overview");
-                  setRunMode("week");
+                  if (runMode === "week") {
+                    setView("overview");
+                  } else {
+                    goHome();
+                  }
                 }}
                 type="button"
               >
                 <ArrowLeft size={14} />{" "}
-                {runMode === "week" ? "ASSIGNMENT OVERVIEW" : "EXAM SETUP"}
+                {runMode === "week" ? "ASSIGNMENT OVERVIEW" : "COURSE HOME"}
               </button>
               <div className="quiz-heading">
                 <div>
@@ -883,11 +967,10 @@ export default function QuizApp({ weeks }) {
                           multiple={question.type === "MSQ"}
                         />
                       </p>
-                      {questionFeedback.explanation !== "Explanation:" && (
-                        <p className="explanation">
-                          {questionFeedback.explanation}
-                        </p>
-                      )}
+                      <Explanation
+                        detail={questionFeedback.explanationDetail}
+                        raw={questionFeedback.explanation}
+                      />
                     </output>
                   )}
               </article>
@@ -1014,12 +1097,16 @@ export default function QuizApp({ weeks }) {
                 <button
                   className="secondary-button"
                   onClick={() => {
-                    setView("overview");
-                    setRunMode("week");
+                    if (runMode === "week") {
+                      setView("overview");
+                    } else {
+                      goHome();
+                    }
                   }}
                   type="button"
                 >
-                  <ArrowLeft size={14} /> Week overview
+                  <ArrowLeft size={14} />{" "}
+                  {runMode === "week" ? "Week overview" : "Course home"}
                 </button>
                 <button
                   className="primary-button"
@@ -1097,9 +1184,10 @@ export default function QuizApp({ weeks }) {
                             multiple={item.type === "MSQ"}
                           />
                         </p>
-                        {item.explanation !== "Explanation:" && (
-                          <p className="explanation">{item.explanation}</p>
-                        )}
+                        <Explanation
+                          detail={item.explanationDetail}
+                          raw={item.explanation}
+                        />
                       </div>
                     </article>
                   );
@@ -1147,7 +1235,7 @@ export default function QuizApp({ weeks }) {
                   aria-selected={examType === "full"}
                   type="button"
                 >
-                  Full exam <span>131 questions</span>
+                  Full exam <span>{totalQuestions} questions</span>
                 </button>
                 <button
                   className={examType === "random50" ? "is-active" : ""}
@@ -1232,7 +1320,7 @@ export default function QuizApp({ weeks }) {
           <span>NPTEL · RESPONSIBLE &amp; SAFE AI SYSTEMS</span>
           <span>
             {view === "home"
-              ? `${weeks.length} WEEKS / 131 QUESTIONS`
+              ? `${weeks.length} WEEKS / ${totalQuestions} QUESTIONS`
               : runMode === "week"
                 ? `WEEK ${String(weekNumber).padStart(2, "0")} / ${week?.totalQuestions ?? 0} QUESTIONS`
                 : `${questions.length} QUESTION EXAM`}
@@ -1243,16 +1331,11 @@ export default function QuizApp({ weeks }) {
   );
 }
 
-function Brand() {
+function Brand({ onClick }) {
   return (
-    <a className="brand" href="#home">
-      <span className="brand-mark">
-        <GraduationCap size={16} />
-      </span>
-      <span>
-        NPTEL <i>/</i> SAFE AI
-      </span>
-    </a>
+    <button className="brand" onClick={onClick} type="button">
+      Safe AI Practice
+    </button>
   );
 }
 
