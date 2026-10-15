@@ -23,6 +23,7 @@ import Flashcards from "./flashcards";
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
+const shuffleOptionsStorageKey = "nptel-shuffle-options";
 const themeStorageKey = "nptel-theme";
 const maxExamHistory = 20;
 const showExamAnswerSetting = false;
@@ -69,6 +70,15 @@ export default function QuizApp({ weeks }) {
     }
   }
 
+  function updateShuffleOptions(enabled) {
+    setShuffleOptions(enabled);
+    try {
+      localStorage.setItem(shuffleOptionsStorageKey, String(enabled));
+    } catch {
+      // The option still applies for this session.
+    }
+  }
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey);
@@ -90,6 +100,14 @@ export default function QuizApp({ weeks }) {
       }
     } catch {
       localStorage.removeItem(storageKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      setShuffleOptions(localStorage.getItem(shuffleOptionsStorageKey) === "true");
+    } catch {
+      // The option defaults to off when browser storage is unavailable.
     }
   }, []);
 
@@ -135,7 +153,11 @@ export default function QuizApp({ weeks }) {
       const response = await fetch(`/api/quiz/${requestedWeek}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setQuestions(data.questions);
+      setQuestions(
+        shuffleOptions
+          ? data.questions.map(shuffleQuestionOptions)
+          : data.questions,
+      );
       setView("quiz");
     } catch (issue) {
       setError(issue.message || "Unable to load this quiz.");
@@ -197,16 +219,7 @@ export default function QuizApp({ weeks }) {
           (left, right) => left.week - right.week || left.number - right.number,
         );
       if (shuffleOptions) {
-        examQuestions = examQuestions.map((item) => ({
-          ...item,
-          options: item.options
-            ? shuffleList(item.options).map((option, index) => ({
-                ...option,
-                sourceOption: option.option,
-                option: String.fromCharCode(97 + index),
-              }))
-            : null,
-        }));
+        examQuestions = examQuestions.map(shuffleQuestionOptions);
       }
       setQuestions(examQuestions);
       setRunMode(mode);
@@ -496,6 +509,21 @@ export default function QuizApp({ weeks }) {
                     />
                   </div>
                 </div>
+              </div>
+              <div className="exam-settings course-settings">
+                <label className="setting-row">
+                  <span>
+                    <b>Shuffle answer options</b>
+                    <small>Applies to weekly assignments and exams</small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={shuffleOptions}
+                    onChange={(event) =>
+                      updateShuffleOptions(event.target.checked)
+                    }
+                  />
+                </label>
               </div>
               {error && (
                 <p className="error-message" role="alert">
@@ -1253,19 +1281,6 @@ export default function QuizApp({ weeks }) {
               <div className="exam-settings">
                 <label className="setting-row">
                   <span>
-                    <b>Shuffle answer options</b>
-                    <small>Mix the choices within each question</small>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={shuffleOptions}
-                    onChange={(event) =>
-                      setShuffleOptions(event.target.checked)
-                    }
-                  />
-                </label>
-                <label className="setting-row">
-                  <span>
                     <b>Shuffle questions across weeks</b>
                     <small>
                       {examType === "random50"
@@ -1399,5 +1414,29 @@ function shuffleList(list) {
       shuffled[index],
     ];
   }
+  return shuffled;
+}
+
+function shuffleQuestionOptions(question) {
+  return {
+    ...question,
+    options: question.options
+      ? shuffleOptionsList(question.options).map((option, index) => ({
+          ...option,
+          sourceOption: option.option,
+          option: String.fromCharCode(97 + index),
+        }))
+      : null,
+  };
+}
+
+function shuffleOptionsList(list) {
+  if (list.length < 2) return [...list];
+
+  let shuffled;
+  do {
+    shuffled = shuffleList(list);
+  } while (shuffled.some((option, index) => option === list[index]));
+
   return shuffled;
 }
