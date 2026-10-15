@@ -2317,7 +2317,7 @@
           "id": "W08-Q08",
           "question_number": 8,
           "type": "MCQ",
-          "question": "Consider the following equation for LIME: What do the components 𝐿 and Ω(𝑔) represent?",
+          "question": "Consider the following equation for LIME:\nξ(x) = argmin₍g ∈ G₎ L(f, g, πₓ) + Ω(g)\n\nWhat do the components L and Ω(g) represent?",
           "options": [
             {
               "option": "a",

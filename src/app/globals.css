@@ -52,10 +52,12 @@ input:focus-visible {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  min-height: 680px;
+  height: 100dvh;
+  min-height: 0;
   padding: 27px 16px 18px;
   border-right: 1px solid var(--line);
   background: #141614;
+  overflow: hidden;
 }
 .brand {
   display: inline-flex;
@@ -117,8 +119,16 @@ input:focus-visible {
 }
 .week-navigation {
   display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #444b40 transparent;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
 }
 .home-link {
   display: flex;
@@ -902,6 +912,7 @@ input:focus-visible {
   font-size: 22px;
   font-weight: 480;
   line-height: 1.5;
+  white-space: pre-line;
 }
 .answer-list {
   display: grid;
@@ -1428,11 +1439,15 @@ input:focus-visible {
     background: #1c201c;
   }
   .week-navigation {
+    min-height: auto;
+    flex: none;
     flex-direction: row;
     gap: 5px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding: 10px 15px;
     scrollbar-width: none;
+    scroll-behavior: smooth;
   }
   .week-navigation::-webkit-scrollbar {
     display: none;
