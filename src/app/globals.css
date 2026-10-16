@@ -164,7 +164,7 @@ select:focus-visible {
 .app-shell {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width, 280px) minmax(0, 1fr);
 }
 .sidebar {
   position: sticky;
@@ -181,6 +181,28 @@ select:focus-visible {
 }
 .mobile-header {
   display: none;
+}
+.desktop-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sidebar-toggle {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.sidebar-toggle:hover {
+  border-color: var(--accent-line);
+  color: var(--accent);
 }
 .brand {
   width: fit-content;
@@ -295,6 +317,68 @@ select:focus-visible {
   font-family: var(--font-num);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+}
+.sidebar-resize-handle {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 9px;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+.sidebar-resize-handle::after {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  bottom: 0;
+  width: 1px;
+  background: transparent;
+  content: "";
+}
+.sidebar-resize-handle:hover::after,
+.sidebar-resize-handle:focus-visible::after {
+  background: var(--accent);
+}
+.sidebar-resize-handle:focus-visible {
+  outline: none;
+}
+.sidebar-collapsed .sidebar {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+.sidebar-collapsed .desktop-brand {
+  justify-content: center;
+}
+.sidebar-collapsed .desktop-brand .brand,
+.sidebar-collapsed .sidebar-course,
+.sidebar-collapsed .week-nav-label,
+.sidebar-collapsed .week-link-title,
+.sidebar-collapsed .week-score,
+.sidebar-collapsed .home-link span {
+  display: none;
+}
+.sidebar-collapsed .home-link {
+  justify-content: center;
+  padding: 0;
+}
+.sidebar-collapsed .sidebar-divider {
+  margin-right: 4px;
+  margin-left: 4px;
+}
+.sidebar-collapsed .week-link {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 0;
+}
+.sidebar-collapsed .week-number {
+  text-align: center;
 }
 
 .main-panel {
@@ -1651,6 +1735,10 @@ html:has(.modal-backdrop) {
     border-right: 0;
     border-bottom: 1px solid var(--line);
     overflow-x: auto;
+  }
+  .sidebar-toggle,
+  .sidebar-resize-handle {
+    display: none;
   }
   .desktop-brand,
   .sidebar-course,

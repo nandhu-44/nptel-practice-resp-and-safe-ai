@@ -8,6 +8,8 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   House,
   Layers,
   Moon,
@@ -25,6 +27,8 @@ const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
 const shuffleOptionsStorageKey = "nptel-shuffle-options";
 const themeStorageKey = "nptel-theme";
+const sidebarWidthStorageKey = "nptel-sidebar-width";
+const sidebarCollapsedStorageKey = "nptel-sidebar-collapsed";
 const maxExamHistory = 20;
 const showExamAnswerSetting = false;
 
@@ -47,6 +51,9 @@ export default function QuizApp({ weeks }) {
   const [examScore, setExamScore] = useState(null);
   const [examHistory, setExamHistory] = useState([]);
   const [theme, setTheme] = useState("dark");
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarResizing, setSidebarResizing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const week = weeks.find((item) => item.week === weekNumber);
@@ -57,7 +64,61 @@ export default function QuizApp({ weeks }) {
     setTheme(
       document.documentElement.dataset.theme === "light" ? "light" : "dark",
     );
+    try {
+      const storedWidth = Number(localStorage.getItem(sidebarWidthStorageKey));
+      if (Number.isFinite(storedWidth) && storedWidth >= 220 && storedWidth <= 420) {
+        setSidebarWidth(storedWidth);
+      }
+      setSidebarCollapsed(
+        localStorage.getItem(sidebarCollapsedStorageKey) === "true",
+      );
+    } catch {
+      // Sidebar preferences remain available for this session.
+    }
   }, []);
+
+  useEffect(() => {
+    if (!sidebarResizing) return undefined;
+
+    function resizeSidebar(event) {
+      setSidebarCollapsed(false);
+      setSidebarWidth(Math.min(420, Math.max(220, event.clientX)));
+    }
+    function stopResizing() {
+      setSidebarResizing(false);
+    }
+
+    window.addEventListener("pointermove", resizeSidebar);
+    window.addEventListener("pointerup", stopResizing);
+    window.addEventListener("pointercancel", stopResizing);
+    return () => {
+      window.removeEventListener("pointermove", resizeSidebar);
+      window.removeEventListener("pointerup", stopResizing);
+      window.removeEventListener("pointercancel", stopResizing);
+    };
+  }, [sidebarResizing]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
+      localStorage.setItem(sidebarCollapsedStorageKey, String(sidebarCollapsed));
+    } catch {
+      // Sidebar preferences still apply until the page is closed.
+    }
+  }, [sidebarWidth, sidebarCollapsed]);
+
+  function toggleSidebar() {
+    setSidebarCollapsed((collapsed) => !collapsed);
+  }
+
+  function resizeSidebarWithKeyboard(event) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    setSidebarCollapsed(false);
+    setSidebarWidth((width) =>
+      Math.min(420, Math.max(220, width + (event.key === "ArrowRight" ? 16 : -16))),
+    );
+  }
 
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
@@ -399,7 +460,10 @@ export default function QuizApp({ weeks }) {
   );
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
+      style={{ "--sidebar-width": `${sidebarCollapsed ? 68 : sidebarWidth}px` }}
+    >
       <header className="mobile-header">
         <Brand onClick={goHome} />
         <span>RESPONSIBLE &amp; SAFE AI SYSTEMS</span>
@@ -407,6 +471,15 @@ export default function QuizApp({ weeks }) {
       <aside className="sidebar">
         <div className="desktop-brand">
           <Brand onClick={goHome} />
+          <button
+            className="sidebar-toggle"
+            onClick={toggleSidebar}
+            type="button"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
         </div>
         <div className="sidebar-course">
           <span className="eyebrow">COURSE</span>
@@ -415,21 +488,23 @@ export default function QuizApp({ weeks }) {
             <br />
             &amp; Safe AI Systems
           </p>
-          <span>WEEKS 01—11</span>
+          <span>WEEKS 01—{String(weeks.length).padStart(2, "0")}</span>
         </div>
         <button
           className={`home-link ${view === "home" ? "is-active" : ""}`}
           onClick={goHome}
           type="button"
+          title="Course home"
         >
-          <House size={14} /> Course home
+          <House size={14} /> <span>Course home</span>
         </button>
         <button
           className={`home-link ${view === "flashcards" ? "is-active" : ""}`}
           onClick={openFlashcards}
           type="button"
+          title="Flashcards"
         >
-          <Layers size={14} /> Flashcards
+          <Layers size={14} /> <span>Flashcards</span>
         </button>
         <div className="sidebar-divider" aria-hidden="true" />
         <nav className="week-navigation" aria-label="Quiz weeks">
@@ -440,6 +515,7 @@ export default function QuizApp({ weeks }) {
               key={item.week}
               onClick={() => chooseWeek(item.week)}
               type="button"
+              title={`Week ${item.week}: ${item.title}`}
               aria-current={
                 view !== "home" &&
                 view !== "flashcards" &&
@@ -458,6 +534,17 @@ export default function QuizApp({ weeks }) {
             </button>
           ))}
         </nav>
+        <hr
+          className="sidebar-resize-handle"
+          tabIndex={0}
+          aria-label="Resize sidebar"
+          aria-orientation="vertical"
+          aria-valuemin={220}
+          aria-valuemax={420}
+          aria-valuenow={sidebarCollapsed ? 68 : sidebarWidth}
+          onPointerDown={() => setSidebarResizing(true)}
+          onKeyDown={resizeSidebarWithKeyboard}
+        />
       </aside>
       <main className="main-panel">
         <div className="topbar">
@@ -487,7 +574,9 @@ export default function QuizApp({ weeks }) {
         <section className="workspace page-enter" key={`${weekNumber}-${view}`}>
           {view === "home" && (
             <>
-              <div className="section-kicker">NPTEL COURSE · 11 WEEKS</div>
+              <div className="section-kicker">
+                NPTEL COURSE · {weeks.length} WEEKS
+              </div>
               <div className="home-heading">
                 <div>
                   <span className="eyebrow">QUIZ PRACTICE</span>
@@ -511,21 +600,6 @@ export default function QuizApp({ weeks }) {
                   </div>
                 </div>
               </div>
-              <div className="exam-settings course-settings">
-                <label className="setting-row">
-                  <span>
-                    <b>Shuffle answer options</b>
-                    <small>Applies to weekly assignments and exams</small>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={shuffleOptions}
-                    onChange={(event) =>
-                      updateShuffleOptions(event.target.checked)
-                    }
-                  />
-                </label>
-              </div>
               {error && (
                 <p className="error-message" role="alert">
                   {error}
@@ -533,7 +607,10 @@ export default function QuizApp({ weeks }) {
               )}
               <section className="home-exam">
                 <div>
-                  <span className="eyebrow">FULL COURSE · WEEKS 01—11</span>
+                  <span className="eyebrow">
+                    FULL COURSE · WEEKS 01—
+                    {String(weeks.length).padStart(2, "0")}
+                  </span>
                   <h2>Take an exam</h2>
                   <p>
                     Choose the full {totalQuestions}-question exam or a random
@@ -1280,6 +1357,19 @@ export default function QuizApp({ weeks }) {
                 </button>
               </div>
               <div className="exam-settings">
+                <label className="setting-row">
+                  <span>
+                    <b>Shuffle answer options</b>
+                    <small>Applies to weekly assignments and exams</small>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={shuffleOptions}
+                    onChange={(event) =>
+                      updateShuffleOptions(event.target.checked)
+                    }
+                  />
+                </label>
                 <label className="setting-row">
                   <span>
                     <b>Shuffle questions across weeks</b>
