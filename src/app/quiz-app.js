@@ -431,6 +431,7 @@ export default function QuizApp({ weeks }) {
         >
           <Layers size={14} /> Flashcards
         </button>
+        <div className="sidebar-divider" aria-hidden="true" />
         <nav className="week-navigation" aria-label="Quiz weeks">
           <span className="eyebrow week-nav-label">ASSIGNMENTS</span>
           {weeks.map((item) => (

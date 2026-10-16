@@ -13,6 +13,7 @@ const weekTitles = [
   "AI governance and policy",
   "AGI, safety and society",
   "Governance and moral consistency",
+  "Representation guarding and graph explainability",
 ];
 
 const allQuestions = quizData.quiz.flatMap((week) =>

@@ -236,6 +236,12 @@ select:focus-visible {
   width: 100%;
   margin-bottom: 2px;
 }
+.sidebar-divider {
+  height: 1px;
+  flex: 0 0 1px;
+  margin: 12px 8px 0;
+  background: var(--line);
+}
 .home-link:hover,
 .week-link:hover {
   background: var(--surface-2);
