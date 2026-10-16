@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "NPTEL AI Ethics, Governance & Safety - Complete Quiz and Answer Key",
-    "description": "Comprehensive extracted assignment quiz and verified answer key covering Weeks 2 through 11.",
-    "total_weeks": 11,
-    "total_questions": 131,
+    "description": "Comprehensive extracted assignment quiz and verified answer key covering Weeks 1 through 12.",
+    "total_weeks": 12,
+    "total_questions": 141,
     "question_type_distribution": {
-      "MCQ": 106,
-      "MSQ": 22,
+      "MCQ": 114,
+      "MSQ": 24,
       "Type_in_numerical": 3
     }
   },
@@ -3340,6 +3340,270 @@
           "input_prompt": null
         }
       ]
+    },
+    {
+      "week": 12,
+      "total_questions": 10,
+      "questions": [
+        {
+          "id": "W12-Q01",
+          "question_number": 1,
+          "type": "MCQ",
+          "question": "What does a ‘guarded’ attribute mean in a language model’s representation space?",
+          "options": [
+            {
+              "option": "a",
+              "text": "The attribute can only be classified by specific linear probes."
+            },
+            {
+              "option": "b",
+              "text": "The attribute requires non-linear transformations to be classified."
+            },
+            {
+              "option": "c",
+              "text": "The attribute is heavily emphasized during the initial pre-training process."
+            },
+            {
+              "option": "d",
+              "text": "The attribute is entirely impossible to classify based on the representation."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q02",
+          "question_number": 2,
+          "type": "MCQ",
+          "question": "What is the primary objective of modifying vectors from one distribution (e.g., toxic to non-toxic) to look like another?",
+          "options": [
+            {
+              "option": "a",
+              "text": "To increase the computational cost of generating toxic content."
+            },
+            {
+              "option": "b",
+              "text": "To guard an attribute with the smallest possible change to unrelated semantics."
+            },
+            {
+              "option": "c",
+              "text": "To fundamentally alter the underlying vocabulary of the model."
+            },
+            {
+              "option": "d",
+              "text": "To completely randomize the vector outputs of specific trigger tokens."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q03",
+          "question_number": 3,
+          "type": "MCQ",
+          "question": "According to the lecture, what is the implication behind using Affine Steering?",
+          "options": [
+            {
+              "option": "a",
+              "text": "It is a no-gradient and cheap way to control model generation."
+            },
+            {
+              "option": "b",
+              "text": "It fine-tunes the model to effectively remove bias using minimal training data."
+            },
+            {
+              "option": "c",
+              "text": "It is a highly interpretable, gradient-based optimization method."
+            },
+            {
+              "option": "d",
+              "text": "It depends heavily on reinforcement learning and human feedback."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q04",
+          "question_number": 4,
+          "type": "MCQ",
+          "question": "How does the size of a conventional cell complex scale as the size of the graph increases?",
+          "options": [
+            {
+              "option": "a",
+              "text": "It scales inversely with respect to graph size."
+            },
+            {
+              "option": "b",
+              "text": "It scales quadratically with respect to graph size."
+            },
+            {
+              "option": "c",
+              "text": "It scales logarithmically with respect to graph size."
+            },
+            {
+              "option": "d",
+              "text": "It scales linearly with respect to graph size."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q05",
+          "question_number": 5,
+          "type": "MCQ",
+          "question": "In the molecule toxicity detection task, why might a standard Graph Neural Network Explainer fail to identify the correct explanation?",
+          "options": [
+            {
+              "option": "a",
+              "text": "It removes all nodes that have a high edge degree."
+            },
+            {
+              "option": "b",
+              "text": "It processes node features too slowly for a chemical dataset."
+            },
+            {
+              "option": "c",
+              "text": "It cannot capture specific multi-node groupwise interactions."
+            },
+            {
+              "option": "d",
+              "text": "It assigns zero weight to all the chemical bonds by default."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q06",
+          "question_number": 6,
+          "type": "MCQ",
+          "question": "How does FORGE reduce the computational complexity of the cell complex to a linear scale?",
+          "options": [
+            {
+              "option": "a",
+              "text": "By randomly sampling only 10% of the original graph edges."
+            },
+            {
+              "option": "b",
+              "text": "By strategically removing specific types of boundary relations."
+            },
+            {
+              "option": "c",
+              "text": "By completely deleting all nodes with a degree higher than a threshold degree."
+            },
+            {
+              "option": "d",
+              "text": "By executing the explainer algorithm on highly compressed latent space."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q07",
+          "question_number": 7,
+          "type": "MCQ",
+          "question": "How are cycles structurally represented in the cell complex?",
+          "options": [
+            {
+              "option": "a",
+              "text": "They are represented as 0-cells."
+            },
+            {
+              "option": "b",
+              "text": "They are represented as 1-cells."
+            },
+            {
+              "option": "c",
+              "text": "They are represented as 2-cells."
+            },
+            {
+              "option": "d",
+              "text": "They are represented as 3-cells."
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q08",
+          "question_number": 8,
+          "type": "MSQ",
+          "question": "Which of the following are examples of graph explainers? (Select all that apply.)",
+          "options": [
+            {
+              "option": "a",
+              "text": "Predicting the next token in a language model"
+            },
+            {
+              "option": "b",
+              "text": "Toxicity detection of molecules"
+            },
+            {
+              "option": "c",
+              "text": "Affine concept erasure"
+            },
+            {
+              "option": "d",
+              "text": "Drug prediction"
+            },
+            {
+              "option": "e",
+              "text": "Fraud detection"
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q09",
+          "question_number": 9,
+          "type": "MCQ",
+          "question": "Which of the following methods benefits the most from the FORGE framework?",
+          "options": [
+            {
+              "option": "a",
+              "text": "Attention-based methods"
+            },
+            {
+              "option": "b",
+              "text": "Surrogate-based methods"
+            },
+            {
+              "option": "c",
+              "text": "Gradient-based methods"
+            },
+            {
+              "option": "d",
+              "text": "Perturbation-based methods"
+            }
+          ],
+          "input_prompt": null
+        },
+        {
+          "id": "W12-Q10",
+          "question_number": 10,
+          "type": "MSQ",
+          "question": "Based on the mathematical definitions of cell complexes presented in the FORGE slides, which of the following statements are correct? (Select all that apply.)",
+          "options": [
+            {
+              "option": "a",
+              "text": "A 0-cell corresponds to a vertex, while a 1-cell corresponds to an edge in traditional graphs."
+            },
+            {
+              "option": "b",
+              "text": "The 1-skeleton X⁽¹⁾ of a cell complex consists exclusively of 1-dimensional cells."
+            },
+            {
+              "option": "c",
+              "text": "Vertical boundary relations connect two cells of the same dimension that share a common boundary."
+            },
+            {
+              "option": "d",
+              "text": "Boundary relations in the framework are restricted to be undirected, meaning σ(c₁, c₂) = σ(c₂, c₁)."
+            },
+            {
+              "option": "e",
+              "text": "A p-cell c⁽ᵖ⁾ is considered a face or boundary of a (p+1)-cell c⁽ᵖ⁺¹⁾ if the set of points composing c⁽ᵖ⁾ is a subset of those composing c⁽ᵖ⁺¹⁾."
+            }
+          ],
+          "input_prompt": null
+        }
+      ]
     }
   ],
   "answer_key": {
@@ -5128,6 +5392,146 @@
         "b. Accuracy does not correlate with consistency."
       ],
       "explanation": "Explanation: Research Overview: SaGE- Quantifying moral consistency in LLMs [22:45-23:58]: The SaGE study demonstrated that a model's benchmark accuracy does not correlate with its consistency at all.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q01": {
+      "week": 12,
+      "question_number": 1,
+      "type": "MCQ",
+      "correct_answers": ["d"],
+      "correct_answers_full_text": [
+        "d. The attribute is entirely impossible to classify based on the representation."
+      ],
+      "explanation": "Explanation: An attribute Z is considered guarded if we can't classify along that attribute.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q02": {
+      "week": 12,
+      "question_number": 2,
+      "type": "MCQ",
+      "correct_answers": ["b"],
+      "correct_answers_full_text": [
+        "b. To guard an attribute with the smallest possible change to unrelated semantics."
+      ],
+      "explanation": "Explanation: We want to guard an attribute with the smallest change possible to preserve semantics unrelated to Z.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q03": {
+      "week": 12,
+      "question_number": 3,
+      "type": "MCQ",
+      "correct_answers": ["a"],
+      "correct_answers_full_text": [
+        "a. It is a no-gradient and cheap way to control model generation."
+      ],
+      "explanation": "Explanation: Affine Steering is a no-gradient and cheap way to control generation and to de-bias.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q04": {
+      "week": 12,
+      "question_number": 4,
+      "type": "MCQ",
+      "correct_answers": ["b"],
+      "correct_answers_full_text": [
+        "b. It scales quadratically with respect to graph size."
+      ],
+      "explanation": "Explanation: The size of a conventional cell complex will scale quadratically as the size of the graph increases.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q05": {
+      "week": 12,
+      "question_number": 5,
+      "type": "MCQ",
+      "correct_answers": ["c"],
+      "correct_answers_full_text": [
+        "c. It cannot capture specific multi-node groupwise interactions."
+      ],
+      "explanation": "Explanation: A limitation of graphs is that they can only model pairwise relationships between nodes.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q06": {
+      "week": 12,
+      "question_number": 6,
+      "type": "MCQ",
+      "correct_answers": ["b"],
+      "correct_answers_full_text": [
+        "b. By strategically removing specific types of boundary relations."
+      ],
+      "explanation": "Explanation: By strategically removing specific types of boundary relations, we can bring this down to linear complexity.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q07": {
+      "week": 12,
+      "question_number": 7,
+      "type": "MCQ",
+      "correct_answers": ["c"],
+      "correct_answers_full_text": ["c. They are represented as 2-cells."],
+      "explanation": "Explanation: Cycles are 2-cells, which are represented as augmented nodes connected to all edges that make up that cycle.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q08": {
+      "week": 12,
+      "question_number": 8,
+      "type": "MSQ",
+      "correct_answers": ["b", "d", "e"],
+      "correct_answers_full_text": [
+        "b. Toxicity detection of molecules",
+        "d. Drug prediction",
+        "e. Fraud detection"
+      ],
+      "explanation": "Explanation: Graph explainers are important in toxicity detection of molecules, drug prediction, fraud detection, etc.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q09": {
+      "week": 12,
+      "question_number": 9,
+      "type": "MCQ",
+      "correct_answers": ["d"],
+      "correct_answers_full_text": ["d. Perturbation-based methods"],
+      "explanation": "Explanation: Perturbation-based methods benefit the most from FORGE.",
+      "source_verification": {
+        "font_color": "red",
+        "highlight_color": null
+      }
+    },
+    "W12-Q10": {
+      "week": 12,
+      "question_number": 10,
+      "type": "MSQ",
+      "correct_answers": ["a", "d", "e"],
+      "correct_answers_full_text": [
+        "a. A 0-cell corresponds to a vertex, while a 1-cell corresponds to an edge in traditional graphs.",
+        "d. Boundary relations in the framework are restricted to be undirected, meaning σ(c₁, c₂) = σ(c₂, c₁).",
+        "e. A p-cell c⁽ᵖ⁾ is considered a face or boundary of a (p+1)-cell c⁽ᵖ⁺¹⁾ if the set of points composing c⁽ᵖ⁾ is a subset of those composing c⁽ᵖ⁺¹⁾."
+      ],
+      "explanation": "Explanation: A - Definition 3.1. B - Definition 3.4 states that X⁽ᵖ⁾ is a subcomplex of cells of dimension at most p, meaning both 0- and 1-cells. C - Definition 3.5 states horizontal boundary relations as linking two p-cells of the same dimension, whereas vertical boundary relations link cells of different dimensions. D - Definition 3.5. E - Definition 3.2.",
       "source_verification": {
         "font_color": "red",
         "highlight_color": null

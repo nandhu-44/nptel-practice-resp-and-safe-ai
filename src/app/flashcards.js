@@ -13,8 +13,17 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import CatMeme, { pickCaption } from "../components/cat-meme";
 import { LectureSources } from "../components/explanation";
+import {
+  byUrgency,
+  cardState,
+  isDue,
+  normalizeProgress,
+  rateCard,
+} from "../lib/srs";
 
 const progressKey = "nptel-flashcards";
+// A card you keep missing is re-queued at most this many times per session.
+const maxRequeues = 2;
 
 function shuffleList(list) {
   const shuffled = [...list];
@@ -34,7 +43,7 @@ export default function Flashcards({ weeks, onHome }) {
   const [progress, setProgress] = useState({});
   const [deckWeek, setDeckWeek] = useState("all");
   const [shuffle, setShuffle] = useState(true);
-  const [weakOnly, setWeakOnly] = useState(false);
+  const [dueOnly, setDueOnly] = useState(true);
   const [deck, setDeck] = useState(null);
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -55,7 +64,7 @@ export default function Flashcards({ weeks, onHome }) {
       });
     try {
       const stored = JSON.parse(localStorage.getItem(progressKey) ?? "{}");
-      if (stored && typeof stored === "object") setProgress(stored);
+      setProgress(normalizeProgress(stored, Date.now()));
     } catch {
       localStorage.removeItem(progressKey);
     }
@@ -68,21 +77,26 @@ export default function Flashcards({ weeks, onHome }) {
     () => new Map(cards.map((card) => [card.id, card])),
     [cards],
   );
-  const poolForSetup = useMemo(
-    () =>
-      cards.filter(
+  const poolForSetup = useMemo(() => {
+    const now = Date.now();
+    return cards
+      .filter(
         (card) =>
           (deckWeek === "all" || card.week === Number(deckWeek)) &&
-          (!weakOnly || progress[card.id] !== "known"),
-      ),
-    [cards, deckWeek, weakOnly, progress],
-  );
-  const knownCount = cards.filter(
-    (card) => progress[card.id] === "known",
-  ).length;
-  const learningCount = cards.filter(
-    (card) => progress[card.id] === "learning",
-  ).length;
+          (!dueOnly || isDue(progress[card.id], now)),
+      )
+      .sort(byUrgency(progress));
+  }, [cards, deckWeek, dueOnly, progress]);
+  const stateCount = (state) =>
+    cards.filter((card) => cardState(progress[card.id]) === state).length;
+  const knownCount = stateCount("mastered");
+  const learningCount = stateCount("learning");
+  const dueCount = useMemo(() => {
+    const now = Date.now();
+    return cards.filter(
+      (card) => progress[card.id] && isDue(progress[card.id], now),
+    ).length;
+  }, [cards, progress]);
 
   function startDeck() {
     if (!poolForSetup.length) return;
@@ -96,8 +110,8 @@ export default function Flashcards({ weeks, onHome }) {
     setReaction({ mood: "idle", seed: Math.floor(Math.random() * 100) });
   }
 
-  function leaveDeck({ weakOnly: nextWeakOnly }) {
-    setWeakOnly(nextWeakOnly);
+  function leaveDeck({ dueOnly: nextDueOnly }) {
+    setDueOnly(nextDueOnly);
     setDeck(null);
     setFinished(false);
   }
@@ -106,7 +120,10 @@ export default function Flashcards({ weeks, onHome }) {
     (status) => {
       if (!deck || finished) return;
       const id = deck[position];
-      const next = { ...progress, [id]: status };
+      const next = {
+        ...progress,
+        [id]: rateCard(progress[id], status, Date.now()),
+      };
       setProgress(next);
       try {
         localStorage.setItem(progressKey, JSON.stringify(next));
@@ -125,7 +142,13 @@ export default function Flashcards({ weeks, onHome }) {
         setReaction({ mood: seed % 2 ? "shocked" : "grumpy", seed });
       }
 
-      if (position >= deck.length - 1) {
+      const requeue =
+        status === "learning" &&
+        deck.filter((cardId) => cardId === id).length <= maxRequeues;
+      const nextDeck = requeue ? [...deck, id] : deck;
+      if (requeue) setDeck(nextDeck);
+
+      if (position >= nextDeck.length - 1) {
         setFinished(true);
         setReaction({ mood: "party", seed });
         confetti({
@@ -184,7 +207,7 @@ export default function Flashcards({ weeks, onHome }) {
     <>
       <button
         className="back-link"
-        onClick={playing ? () => leaveDeck({ weakOnly }) : onHome}
+        onClick={playing ? () => leaveDeck({ dueOnly }) : onHome}
         type="button"
       >
         <ArrowLeft size={14} /> {playing ? "END DECK" : "COURSE HOME"}
@@ -195,8 +218,8 @@ export default function Flashcards({ weeks, onHome }) {
             <span className="eyebrow">FLASHCARDS · ACTIVE RECALL</span>
             <h1>Flashcards</h1>
             <p>
-              Flip each card, then be honest. Cards you miss come back; cards
-              you know earn a cat&apos;s approval.
+              Flip each card, then be honest. Cards you miss come back this
+              session; cards you know return later on a spaced schedule.
             </p>
           </div>
           <span className="study-count">{cards.length} CARDS</span>
@@ -217,6 +240,10 @@ export default function Flashcards({ weeks, onHome }) {
           <div>
             <span className="eyebrow">STILL LEARNING</span>
             <strong>{learningCount}</strong>
+          </div>
+          <div>
+            <span className="eyebrow">DUE NOW</span>
+            <strong>{dueCount}</strong>
           </div>
           <div>
             <span className="eyebrow">NEW</span>
@@ -265,13 +292,13 @@ export default function Flashcards({ weeks, onHome }) {
             </label>
             <label className="setting-row">
               <span>
-                <b>Skip mastered cards</b>
-                <small>Only new and still-learning cards</small>
+                <b>Only cards due for review</b>
+                <small>New cards plus ones scheduled for today</small>
               </span>
               <input
                 type="checkbox"
-                checked={weakOnly}
-                onChange={(event) => setWeakOnly(event.target.checked)}
+                checked={dueOnly}
+                onChange={(event) => setDueOnly(event.target.checked)}
               />
             </label>
             <div className="fc-setup-actions">
@@ -284,7 +311,7 @@ export default function Flashcards({ weeks, onHome }) {
                 <Layers size={15} />{" "}
                 {poolForSetup.length
                   ? `Start ${poolForSetup.length} cards`
-                  : "Nothing to review"}
+                  : "Nothing due — all caught up"}
                 <ArrowRight size={15} />
               </button>
               <button
@@ -404,21 +431,24 @@ export default function Flashcards({ weeks, onHome }) {
             <span className="eyebrow">DECK COMPLETE</span>
             <h2 className="fc-done-title">Deck cleared.</h2>
             <p className="fc-done-copy">
-              {deck.length} cards reviewed · best streak {bestStreak}.{" "}
-              {deck.filter((id) => progress[id] === "learning").length} still
-              need work.
+              {new Set(deck).size} cards reviewed · best streak {bestStreak}.{" "}
+              {
+                [...new Set(deck)].filter((id) => progress[id]?.box === 0)
+                  .length
+              }{" "}
+              still need work.
             </p>
             <div className="fc-setup-actions">
               <button
                 className="primary-button"
-                onClick={() => leaveDeck({ weakOnly: true })}
+                onClick={() => leaveDeck({ dueOnly: true })}
                 type="button"
               >
                 <Shuffle size={15} /> Review the weak ones
               </button>
               <button
                 className="secondary-button"
-                onClick={() => leaveDeck({ weakOnly: false })}
+                onClick={() => leaveDeck({ dueOnly: false })}
                 type="button"
               >
                 New deck

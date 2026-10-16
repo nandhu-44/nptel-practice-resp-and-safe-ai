@@ -8,16 +8,21 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  ChevronLeft,
   House,
   Layers,
   Moon,
   RotateCcw,
+  Search as SearchIcon,
   Shuffle,
   Sun,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Explanation from "../components/explanation";
+import Mistakes from "../components/mistakes";
+import Search from "../components/search";
+import { loadMistakes, recordResults } from "../lib/mistakes";
 import Flashcards from "./flashcards";
 
 const storageKey = "nptel-quiz-progress";
@@ -26,6 +31,17 @@ const examHistoryStorageKey = "nptel-exam-history";
 const themeStorageKey = "nptel-theme";
 const maxExamHistory = 20;
 const showExamAnswerSetting = false;
+// Views that are not tied to a specific week in the sidebar.
+const toolViews = ["home", "flashcards", "mistakes", "search"];
+// The phone week rail stays open on these; elsewhere it tucks into a handle.
+const railDockedViews = ["home", "overview"];
+const toolViewLabels = {
+  home: "COURSE HOME",
+  flashcards: "FLASHCARDS",
+  mistakes: "MISTAKES",
+  search: "SEARCH",
+};
+const pad = (value) => String(value).padStart(2, "0");
 
 export default function QuizApp({ weeks }) {
   const [weekNumber, setWeekNumber] = useState(1);
@@ -45,6 +61,8 @@ export default function QuizApp({ weeks }) {
   const [scores, setScores] = useState({});
   const [examScore, setExamScore] = useState(null);
   const [examHistory, setExamHistory] = useState([]);
+  const [mistakes, setMistakes] = useState({});
+  const [railPeek, setRailPeek] = useState(false);
   const [theme, setTheme] = useState("dark");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -68,6 +86,36 @@ export default function QuizApp({ weeks }) {
       // Theme still applies for this session.
     }
   }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: collapse the rail whenever the view changes
+  useEffect(() => {
+    setRailPeek(false);
+  }, [view, weekNumber]);
+
+  useEffect(() => {
+    setMistakes(loadMistakes());
+  }, []);
+
+  // "/" jumps to search, unless you are typing somewhere.
+  useEffect(() => {
+    function onKey(event) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey)
+        return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      )
+        return;
+      event.preventDefault();
+      setView("search");
+      setRunMode("week");
+      setResult(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     try {
@@ -240,6 +288,7 @@ export default function QuizApp({ weeks }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setCheckedResults((old) => ({ ...old, [question.id]: data }));
+      trackMistakes([data]);
     } catch (issue) {
       setError(issue.message || "Unable to check this answer.");
     } finally {
@@ -266,6 +315,7 @@ export default function QuizApp({ weeks }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setResult(data);
+      trackMistakes(data.results);
       if (runMode === "week") {
         const nextScores = { ...scores, [weekNumber]: data.percentage };
         setScores(nextScores);
@@ -346,6 +396,21 @@ export default function QuizApp({ weeks }) {
     setResult(null);
     setError("");
   }
+  function trackMistakes(results) {
+    setMistakes((old) => recordResults(old, results));
+  }
+  function openMistakes() {
+    setView("mistakes");
+    setRunMode("week");
+    setResult(null);
+    setError("");
+  }
+  function openSearch() {
+    setView("search");
+    setRunMode("week");
+    setResult(null);
+    setError("");
+  }
   function openFlashcards() {
     setView("flashcards");
     setRunMode("week");
@@ -380,16 +445,29 @@ export default function QuizApp({ weeks }) {
       )
     : 0;
   const answered = Object.keys(checkedResults).length;
+  const mistakeCount = Object.keys(mistakes).length;
   const totalQuestions = weeks.reduce(
     (sum, item) => sum + item.totalQuestions,
     0,
   );
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${railDockedViews.includes(view) ? "rail-docked" : ""}`}
+    >
       <header className="mobile-header">
         <Brand onClick={goHome} />
-        <span>RESPONSIBLE &amp; SAFE AI SYSTEMS</span>
+        <span className="mobile-header-title">
+          RESPONSIBLE &amp; SAFE AI SYSTEMS
+        </span>
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          type="button"
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+        >
+          {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
       </header>
       <aside className="sidebar">
         <div className="desktop-brand">
@@ -402,7 +480,7 @@ export default function QuizApp({ weeks }) {
             <br />
             &amp; Safe AI Systems
           </p>
-          <span>WEEKS 01—11</span>
+          <span>WEEKS 01—{pad(weeks.length)}</span>
         </div>
         <button
           className={`home-link ${view === "home" ? "is-active" : ""}`}
@@ -418,18 +496,31 @@ export default function QuizApp({ weeks }) {
         >
           <Layers size={14} /> Flashcards
         </button>
+        <button
+          className={`home-link ${view === "mistakes" ? "is-active" : ""}`}
+          onClick={openMistakes}
+          type="button"
+        >
+          <RotateCcw size={14} /> Mistakes
+          {mistakeCount > 0 && <b className="nav-badge">{mistakeCount}</b>}
+        </button>
+        <button
+          className={`home-link ${view === "search" ? "is-active" : ""}`}
+          onClick={openSearch}
+          type="button"
+        >
+          <SearchIcon size={14} /> Search
+        </button>
         <nav className="week-navigation" aria-label="Quiz weeks">
           <span className="eyebrow week-nav-label">ASSIGNMENTS</span>
           {weeks.map((item) => (
             <button
-              className={`week-link ${view !== "home" && view !== "flashcards" && weekNumber === item.week ? "is-active" : ""}`}
+              className={`week-link ${!toolViews.includes(view) && weekNumber === item.week ? "is-active" : ""}`}
               key={item.week}
               onClick={() => chooseWeek(item.week)}
               type="button"
               aria-current={
-                view !== "home" &&
-                view !== "flashcards" &&
-                weekNumber === item.week
+                !toolViews.includes(view) && weekNumber === item.week
                   ? "page"
                   : undefined
               }
@@ -445,19 +536,79 @@ export default function QuizApp({ weeks }) {
           ))}
         </nav>
       </aside>
+      {!railDockedViews.includes(view) && !railPeek && (
+        <button
+          aria-label="Show assignment numbers"
+          className="mobile-rail-handle"
+          onClick={() => setRailPeek(true)}
+          type="button"
+        >
+          <ChevronLeft size={16} />
+        </button>
+      )}
+      {!railDockedViews.includes(view) && railPeek && (
+        <button
+          aria-label="Hide assignment numbers"
+          className="mobile-rail-scrim"
+          onClick={() => setRailPeek(false)}
+          type="button"
+        />
+      )}
+      {(railDockedViews.includes(view) || railPeek) && (
+        <nav aria-label="Assignments" className="mobile-rail">
+          <span aria-hidden="true" className="mobile-rail-label">
+            WK
+          </span>
+          {weeks.map((item) => {
+            const active =
+              !toolViews.includes(view) && weekNumber === item.week;
+            return (
+              <button
+                aria-current={active ? "page" : undefined}
+                aria-label={`Week ${item.week}: ${item.title}`}
+                className={`mobile-rail-week ${active ? "is-active" : ""} ${scores[item.week] !== undefined ? "is-done" : ""}`}
+                key={item.week}
+                onClick={() => chooseWeek(item.week)}
+                type="button"
+              >
+                {pad(item.week)}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+      <nav aria-label="Primary" className="mobile-tabbar">
+        {[
+          ["home", "Home", House, goHome],
+          ["flashcards", "Cards", Layers, openFlashcards],
+          ["mistakes", "Mistakes", RotateCcw, openMistakes],
+          ["search", "Search", SearchIcon, openSearch],
+        ].map(([id, label, Icon, action]) => (
+          <button
+            aria-current={view === id ? "page" : undefined}
+            className={view === id ? "is-active" : ""}
+            key={id}
+            onClick={action}
+            type="button"
+          >
+            <Icon size={18} />
+            {label}
+            {id === "mistakes" && mistakeCount > 0 && (
+              <b className="nav-badge">{mistakeCount}</b>
+            )}
+          </button>
+        ))}
+      </nav>
       <main className="main-panel">
         <div className="topbar">
           <div>
             RESPONSIBLE &amp; SAFE AI SYSTEMS <span>/</span>{" "}
-            {view === "home"
-              ? "COURSE HOME"
-              : view === "flashcards"
-                ? "FLASHCARDS"
-                : runMode === "week"
-                  ? `WEEK ${String(weekNumber).padStart(2, "0")}`
-                  : runMode === "random50"
-                    ? "RANDOM 50 EXAM"
-                    : "FULL EXAM"}
+            {toolViewLabels[view] ??
+              (runMode === "week"
+                ? `WEEK ${pad(weekNumber)}`
+                : runMode === "random50"
+                  ? "RANDOM 50 EXAM"
+                  : "FULL EXAM")}
           </div>
           <span>
             <button
@@ -473,7 +624,9 @@ export default function QuizApp({ weeks }) {
         <section className="workspace page-enter" key={`${weekNumber}-${view}`}>
           {view === "home" && (
             <>
-              <div className="section-kicker">NPTEL COURSE · 11 WEEKS</div>
+              <div className="section-kicker">
+                NPTEL COURSE · {weeks.length} WEEKS
+              </div>
               <div className="home-heading">
                 <div>
                   <span className="eyebrow">QUIZ PRACTICE</span>
@@ -504,7 +657,9 @@ export default function QuizApp({ weeks }) {
               )}
               <section className="home-exam">
                 <div>
-                  <span className="eyebrow">FULL COURSE · WEEKS 01—11</span>
+                  <span className="eyebrow">
+                    FULL COURSE · WEEKS 01—{pad(weeks.length)}
+                  </span>
                   <h2>Take an exam</h2>
                   <p>
                     Choose the full {totalQuestions}-question exam or a random
@@ -548,6 +703,34 @@ export default function QuizApp({ weeks }) {
                   >
                     <Layers size={15} /> Open flashcards{" "}
                     <ArrowRight size={15} />
+                  </button>
+                </div>
+              </section>
+              <section className="home-exam home-flashcards">
+                <div>
+                  <span className="eyebrow">TARGETED PRACTICE</span>
+                  <h2>Mistakes</h2>
+                  <p>
+                    {mistakeCount
+                      ? `${mistakeCount} question${mistakeCount === 1 ? "" : "s"} you got wrong, ready to retry. Get one right and it drops off the list.`
+                      : "Questions you get wrong in assignments and exams collect here for a focused retry."}
+                  </p>
+                </div>
+                <div className="home-exam-actions">
+                  <button
+                    className="primary-button"
+                    onClick={openMistakes}
+                    type="button"
+                  >
+                    <RotateCcw size={15} /> Practise mistakes{" "}
+                    <ArrowRight size={15} />
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={openSearch}
+                    type="button"
+                  >
+                    <SearchIcon size={14} /> Search
                   </button>
                 </div>
               </section>
@@ -601,7 +784,9 @@ export default function QuizApp({ weeks }) {
               )}
               <div className="home-assignment-heading">
                 <div>
-                  <span className="eyebrow">11 WEEKLY ASSIGNMENTS</span>
+                  <span className="eyebrow">
+                    {weeks.length} WEEKLY ASSIGNMENTS
+                  </span>
                   <h2>Choose a week</h2>
                 </div>
                 <span className="eyebrow">{completed} COMPLETED</span>
@@ -647,6 +832,14 @@ export default function QuizApp({ weeks }) {
           {view === "flashcards" && (
             <Flashcards weeks={weeks} onHome={goHome} />
           )}
+          {view === "mistakes" && (
+            <Mistakes
+              mistakes={mistakes}
+              onHome={goHome}
+              onRecord={trackMistakes}
+            />
+          )}
+          {view === "search" && <Search weeks={weeks} onHome={goHome} />}
           {view === "study" && week && (
             <>
               <button className="back-link" onClick={goHome} type="button">
