@@ -29,6 +29,7 @@ const shuffleOptionsStorageKey = "nptel-shuffle-options";
 const themeStorageKey = "nptel-theme";
 const sidebarWidthStorageKey = "nptel-sidebar-width";
 const sidebarCollapsedStorageKey = "nptel-sidebar-collapsed";
+const maxSidebarWidth = 560;
 const maxExamHistory = 20;
 const showExamAnswerSetting = false;
 
@@ -66,7 +67,11 @@ export default function QuizApp({ weeks }) {
     );
     try {
       const storedWidth = Number(localStorage.getItem(sidebarWidthStorageKey));
-      if (Number.isFinite(storedWidth) && storedWidth >= 220 && storedWidth <= 420) {
+      if (
+        Number.isFinite(storedWidth) &&
+        storedWidth >= 220 &&
+        storedWidth <= maxSidebarWidth
+      ) {
         setSidebarWidth(storedWidth);
       }
       setSidebarCollapsed(
@@ -82,7 +87,7 @@ export default function QuizApp({ weeks }) {
 
     function resizeSidebar(event) {
       setSidebarCollapsed(false);
-      setSidebarWidth(Math.min(420, Math.max(220, event.clientX)));
+      setSidebarWidth(Math.min(maxSidebarWidth, Math.max(220, event.clientX)));
     }
     function stopResizing() {
       setSidebarResizing(false);
@@ -116,7 +121,10 @@ export default function QuizApp({ weeks }) {
     event.preventDefault();
     setSidebarCollapsed(false);
     setSidebarWidth((width) =>
-      Math.min(420, Math.max(220, width + (event.key === "ArrowRight" ? 16 : -16))),
+      Math.min(
+        maxSidebarWidth,
+        Math.max(220, width + (event.key === "ArrowRight" ? 16 : -16)),
+      ),
     );
   }
 
@@ -540,7 +548,7 @@ export default function QuizApp({ weeks }) {
           aria-label="Resize sidebar"
           aria-orientation="vertical"
           aria-valuemin={220}
-          aria-valuemax={420}
+          aria-valuemax={maxSidebarWidth}
           aria-valuenow={sidebarCollapsed ? 68 : sidebarWidth}
           onPointerDown={() => setSidebarResizing(true)}
           onKeyDown={resizeSidebarWithKeyboard}
