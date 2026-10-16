@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   ChevronLeft,
+  ChevronRight,
   House,
   Layers,
   Moon,
@@ -28,7 +29,11 @@ import Flashcards from "./flashcards";
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
+const shuffleOptionsStorageKey = "nptel-shuffle-options";
 const themeStorageKey = "nptel-theme";
+const sidebarWidthStorageKey = "nptel-sidebar-width";
+const sidebarCollapsedStorageKey = "nptel-sidebar-collapsed";
+const maxSidebarWidth = 560;
 const maxExamHistory = 20;
 const showExamAnswerSetting = false;
 // Views that are not tied to a specific week in the sidebar.
@@ -64,6 +69,9 @@ export default function QuizApp({ weeks }) {
   const [mistakes, setMistakes] = useState({});
   const [railPeek, setRailPeek] = useState(false);
   const [theme, setTheme] = useState("dark");
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarResizing, setSidebarResizing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const week = weeks.find((item) => item.week === weekNumber);
@@ -74,7 +82,71 @@ export default function QuizApp({ weeks }) {
     setTheme(
       document.documentElement.dataset.theme === "light" ? "light" : "dark",
     );
+    try {
+      const storedWidth = Number(localStorage.getItem(sidebarWidthStorageKey));
+      if (
+        Number.isFinite(storedWidth) &&
+        storedWidth >= 220 &&
+        storedWidth <= maxSidebarWidth
+      ) {
+        setSidebarWidth(storedWidth);
+      }
+      setSidebarCollapsed(
+        localStorage.getItem(sidebarCollapsedStorageKey) === "true",
+      );
+    } catch {
+      // Sidebar preferences remain available for this session.
+    }
   }, []);
+
+  useEffect(() => {
+    if (!sidebarResizing) return undefined;
+
+    function resizeSidebar(event) {
+      setSidebarCollapsed(false);
+      setSidebarWidth(Math.min(maxSidebarWidth, Math.max(220, event.clientX)));
+    }
+    function stopResizing() {
+      setSidebarResizing(false);
+    }
+
+    window.addEventListener("pointermove", resizeSidebar);
+    window.addEventListener("pointerup", stopResizing);
+    window.addEventListener("pointercancel", stopResizing);
+    return () => {
+      window.removeEventListener("pointermove", resizeSidebar);
+      window.removeEventListener("pointerup", stopResizing);
+      window.removeEventListener("pointercancel", stopResizing);
+    };
+  }, [sidebarResizing]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(sidebarWidthStorageKey, String(sidebarWidth));
+      localStorage.setItem(
+        sidebarCollapsedStorageKey,
+        String(sidebarCollapsed),
+      );
+    } catch {
+      // Sidebar preferences still apply until the page is closed.
+    }
+  }, [sidebarWidth, sidebarCollapsed]);
+
+  function toggleSidebar() {
+    setSidebarCollapsed((collapsed) => !collapsed);
+  }
+
+  function resizeSidebarWithKeyboard(event) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    setSidebarCollapsed(false);
+    setSidebarWidth((width) =>
+      Math.min(
+        maxSidebarWidth,
+        Math.max(220, width + (event.key === "ArrowRight" ? 16 : -16)),
+      ),
+    );
+  }
 
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
@@ -117,6 +189,15 @@ export default function QuizApp({ weeks }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  function updateShuffleOptions(enabled) {
+    setShuffleOptions(enabled);
+    try {
+      localStorage.setItem(shuffleOptionsStorageKey, String(enabled));
+    } catch {
+      // The option still applies for this session.
+    }
+  }
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey);
@@ -138,6 +219,16 @@ export default function QuizApp({ weeks }) {
       }
     } catch {
       localStorage.removeItem(storageKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      setShuffleOptions(
+        localStorage.getItem(shuffleOptionsStorageKey) === "true",
+      );
+    } catch {
+      // The option defaults to off when browser storage is unavailable.
     }
   }, []);
 
@@ -183,7 +274,11 @@ export default function QuizApp({ weeks }) {
       const response = await fetch(`/api/quiz/${requestedWeek}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setQuestions(data.questions);
+      setQuestions(
+        shuffleOptions
+          ? data.questions.map(shuffleQuestionOptions)
+          : data.questions,
+      );
       setView("quiz");
     } catch (issue) {
       setError(issue.message || "Unable to load this quiz.");
@@ -245,16 +340,7 @@ export default function QuizApp({ weeks }) {
           (left, right) => left.week - right.week || left.number - right.number,
         );
       if (shuffleOptions) {
-        examQuestions = examQuestions.map((item) => ({
-          ...item,
-          options: item.options
-            ? shuffleList(item.options).map((option, index) => ({
-                ...option,
-                sourceOption: option.option,
-                option: String.fromCharCode(97 + index),
-              }))
-            : null,
-        }));
+        examQuestions = examQuestions.map(shuffleQuestionOptions);
       }
       setQuestions(examQuestions);
       setRunMode(mode);
@@ -453,7 +539,8 @@ export default function QuizApp({ weeks }) {
 
   return (
     <div
-      className={`app-shell ${railDockedViews.includes(view) ? "rail-docked" : ""}`}
+      className={`app-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}${railDockedViews.includes(view) ? " rail-docked" : ""}`}
+      style={{ "--sidebar-width": `${sidebarCollapsed ? 68 : sidebarWidth}px` }}
     >
       <header className="mobile-header">
         <Brand onClick={goHome} />
@@ -472,6 +559,21 @@ export default function QuizApp({ weeks }) {
       <aside className="sidebar">
         <div className="desktop-brand">
           <Brand onClick={goHome} />
+          <button
+            className="sidebar-toggle"
+            onClick={toggleSidebar}
+            type="button"
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight size={16} />
+            ) : (
+              <ChevronLeft size={16} />
+            )}
+          </button>
         </div>
         <div className="sidebar-course">
           <span className="eyebrow">COURSE</span>
@@ -480,37 +582,42 @@ export default function QuizApp({ weeks }) {
             <br />
             &amp; Safe AI Systems
           </p>
-          <span>WEEKS 01—{pad(weeks.length)}</span>
+          <span>WEEKS 01—{String(weeks.length).padStart(2, "0")}</span>
         </div>
         <button
           className={`home-link ${view === "home" ? "is-active" : ""}`}
           onClick={goHome}
           type="button"
+          title="Course home"
         >
-          <House size={14} /> Course home
+          <House size={14} /> <span>Course home</span>
         </button>
         <button
           className={`home-link ${view === "flashcards" ? "is-active" : ""}`}
           onClick={openFlashcards}
           type="button"
+          title="Flashcards"
         >
-          <Layers size={14} /> Flashcards
+          <Layers size={14} /> <span>Flashcards</span>
         </button>
         <button
           className={`home-link ${view === "mistakes" ? "is-active" : ""}`}
           onClick={openMistakes}
           type="button"
+          title="Mistakes"
         >
-          <RotateCcw size={14} /> Mistakes
+          <RotateCcw size={14} /> <span>Mistakes</span>
           {mistakeCount > 0 && <b className="nav-badge">{mistakeCount}</b>}
         </button>
         <button
           className={`home-link ${view === "search" ? "is-active" : ""}`}
           onClick={openSearch}
           type="button"
+          title="Search"
         >
-          <SearchIcon size={14} /> Search
+          <SearchIcon size={14} /> <span>Search</span>
         </button>
+        <div className="sidebar-divider" aria-hidden="true" />
         <nav className="week-navigation" aria-label="Quiz weeks">
           <span className="eyebrow week-nav-label">ASSIGNMENTS</span>
           {weeks.map((item) => (
@@ -519,6 +626,7 @@ export default function QuizApp({ weeks }) {
               key={item.week}
               onClick={() => chooseWeek(item.week)}
               type="button"
+              title={`Week ${item.week}: ${item.title}`}
               aria-current={
                 !toolViews.includes(view) && weekNumber === item.week
                   ? "page"
@@ -535,6 +643,17 @@ export default function QuizApp({ weeks }) {
             </button>
           ))}
         </nav>
+        <hr
+          className="sidebar-resize-handle"
+          tabIndex={0}
+          aria-label="Resize sidebar"
+          aria-orientation="vertical"
+          aria-valuemin={220}
+          aria-valuemax={maxSidebarWidth}
+          aria-valuenow={sidebarCollapsed ? 68 : sidebarWidth}
+          onPointerDown={() => setSidebarResizing(true)}
+          onKeyDown={resizeSidebarWithKeyboard}
+        />
       </aside>
       {!railDockedViews.includes(view) && !railPeek && (
         <button
@@ -658,7 +777,8 @@ export default function QuizApp({ weeks }) {
               <section className="home-exam">
                 <div>
                   <span className="eyebrow">
-                    FULL COURSE · WEEKS 01—{pad(weeks.length)}
+                    FULL COURSE · WEEKS 01—
+                    {String(weeks.length).padStart(2, "0")}
                   </span>
                   <h2>Take an exam</h2>
                   <p>
@@ -1447,13 +1567,13 @@ export default function QuizApp({ weeks }) {
                 <label className="setting-row">
                   <span>
                     <b>Shuffle answer options</b>
-                    <small>Mix the choices within each question</small>
+                    <small>Applies to weekly assignments and exams</small>
                   </span>
                   <input
                     type="checkbox"
                     checked={shuffleOptions}
                     onChange={(event) =>
-                      setShuffleOptions(event.target.checked)
+                      updateShuffleOptions(event.target.checked)
                     }
                   />
                 </label>
@@ -1592,5 +1712,29 @@ function shuffleList(list) {
       shuffled[index],
     ];
   }
+  return shuffled;
+}
+
+function shuffleQuestionOptions(question) {
+  return {
+    ...question,
+    options: question.options
+      ? shuffleOptionsList(question.options).map((option, index) => ({
+          ...option,
+          sourceOption: option.option,
+          option: String.fromCharCode(97 + index),
+        }))
+      : null,
+  };
+}
+
+function shuffleOptionsList(list) {
+  if (list.length < 2) return [...list];
+
+  let shuffled;
+  do {
+    shuffled = shuffleList(list);
+  } while (shuffled.some((option, index) => option === list[index]));
+
   return shuffled;
 }
