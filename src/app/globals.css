@@ -1267,6 +1267,111 @@ button:disabled {
   align-items: center;
   gap: 8px;
 }
+.final-score-checker {
+  display: grid;
+  gap: 22px;
+  margin: 24px 0 32px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.final-score-heading,
+.final-score-controls,
+.final-score-breakdown > span,
+.final-score-breakdown > strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.final-score-heading h2 {
+  margin: 5px 0 0;
+  font-size: 21px;
+}
+.final-score-criteria {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+.final-score-criteria span {
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 700;
+}
+.final-score-controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.final-score-controls label span {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+.final-score-input-row,
+.final-score-input {
+  display: flex;
+  align-items: center;
+}
+.final-score-input-row {
+  gap: 10px;
+}
+.final-score-input {
+  width: 118px;
+  min-height: 46px;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.final-score-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+}
+.final-score-input span {
+  color: var(--text-3);
+}
+.final-score-breakdown {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 14px;
+}
+.final-score-breakdown b {
+  color: var(--text);
+  font-family: var(--font-num);
+  font-size: 14px;
+}
+.final-score-breakdown > strong {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-size: 16px;
+}
+.final-score-breakdown > strong b {
+  color: var(--good);
+  font-size: 21px;
+}
+.final-score-status {
+  font-size: 12px;
+  font-weight: 700;
+}
+.final-score-status.passed {
+  color: var(--good);
+}
+.final-score-status.failed {
+  color: var(--bad);
+}
 .results-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2058,6 +2163,26 @@ mark {
   .review-item {
     grid-template-columns: minmax(0, 1fr);
     padding: 18px;
+  }
+  .final-score-checker {
+    padding: 18px;
+  }
+  .final-score-heading,
+  .final-score-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .final-score-criteria {
+    align-self: flex-start;
+    justify-items: start;
+  }
+  .final-score-input-row .secondary-button {
+    flex: 1;
+    padding: 0 12px;
+  }
+  .final-score-breakdown > span,
+  .final-score-breakdown > strong {
+    align-items: flex-start;
   }
   .question-controls .primary-button,
   .question-controls .secondary-button {

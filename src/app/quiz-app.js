@@ -29,6 +29,7 @@ import Flashcards from "./flashcards";
 const storageKey = "nptel-quiz-progress";
 const examScoreStorageKey = "nptel-exam-score";
 const examHistoryStorageKey = "nptel-exam-history";
+const nptelAssignmentScoreStorageKey = "nptel-official-assignment-score";
 const shuffleOptionsStorageKey = "nptel-shuffle-options";
 const themeStorageKey = "nptel-theme";
 const sidebarWidthStorageKey = "nptel-sidebar-width";
@@ -66,6 +67,8 @@ export default function QuizApp({ weeks }) {
   const [scores, setScores] = useState({});
   const [examScore, setExamScore] = useState(null);
   const [examHistory, setExamHistory] = useState([]);
+  const [nptelAssignmentScore, setNptelAssignmentScore] = useState("");
+  const [calculatedFinalScore, setCalculatedFinalScore] = useState(null);
   const [mistakes, setMistakes] = useState({});
   const [railPeek, setRailPeek] = useState(false);
   const [theme, setTheme] = useState("dark");
@@ -202,6 +205,9 @@ export default function QuizApp({ weeks }) {
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) setScores(JSON.parse(stored));
+      setNptelAssignmentScore(
+        localStorage.getItem(nptelAssignmentScoreStorageKey) ?? "",
+      );
       const storedExamScore = localStorage.getItem(examScoreStorageKey);
       if (storedExamScore) setExamScore(JSON.parse(storedExamScore));
       const storedExamHistory = localStorage.getItem(examHistoryStorageKey);
@@ -400,6 +406,7 @@ export default function QuizApp({ weeks }) {
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      setCalculatedFinalScore(null);
       setResult(data);
       trackMistakes(data.results);
       if (runMode === "week") {
@@ -457,6 +464,7 @@ export default function QuizApp({ weeks }) {
 
   function openExamReview(attempt) {
     setQuestions(attempt.questions);
+    setCalculatedFinalScore(null);
     setResult(attempt.result);
     setRunMode(attempt.mode);
     setIndex(0);
@@ -520,6 +528,18 @@ export default function QuizApp({ weeks }) {
           ? selected.filter((item) => item !== value)
           : [...selected, value],
       };
+    });
+  }
+
+  function calculateFinalScore(event) {
+    event.preventDefault();
+    const officialAssignmentPercentage = Number(nptelAssignmentScore);
+    const websiteContribution = (result.score / result.total) * 75;
+    const assignmentContribution = officialAssignmentPercentage * 0.25;
+    setCalculatedFinalScore({
+      website: websiteContribution,
+      assignments: assignmentContribution,
+      total: websiteContribution + assignmentContribution,
     });
   }
 
@@ -1406,6 +1426,81 @@ export default function QuizApp({ weeks }) {
                 </span>
                 <span>{result.total} QUESTIONS</span>
               </div>
+              <form
+                className="final-score-checker"
+                onSubmit={calculateFinalScore}
+              >
+                <div className="final-score-heading">
+                  <div>
+                    <span className="eyebrow">WEIGHTED FINAL SCORE</span>
+                    <h2>Estimate your NPTEL score</h2>
+                  </div>
+                  <div className="final-score-criteria">
+                    <span>75% THIS SITE + 25% OFFICIAL ASSIGNMENTS</span>
+                    <span>PASS MARK: 40 / 100</span>
+                  </div>
+                </div>
+                <div className="final-score-controls">
+                  <label htmlFor="official-assignment-score">
+                    Official NPTEL assignment score
+                    <span>Enter your final assignment percentage, separate from this practice assignment.</span>
+                  </label>
+                  <div className="final-score-input-row">
+                    <div className="final-score-input">
+                      <input
+                        id="official-assignment-score"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        value={nptelAssignmentScore}
+                        onChange={(event) => {
+                          setNptelAssignmentScore(event.target.value);
+                          setCalculatedFinalScore(null);
+                          try {
+                            localStorage.setItem(
+                              nptelAssignmentScoreStorageKey,
+                              event.target.value,
+                            );
+                          } catch {
+                            // The entered score remains available for this session.
+                          }
+                        }}
+                        required
+                      />
+                      <span>%</span>
+                    </div>
+                    <button className="secondary-button" type="submit">
+                      Calculate score
+                    </button>
+                  </div>
+                </div>
+                {calculatedFinalScore && (
+                  <div className="final-score-breakdown" aria-live="polite">
+                    <span>
+                      This site: {result.score}/{result.total} correct
+                      <b>{calculatedFinalScore.website.toFixed(1)} / 75</b>
+                    </span>
+                    <span>
+                      Official assignments: {nptelAssignmentScore}%
+                      <b>
+                        {calculatedFinalScore.assignments.toFixed(1)} / 25
+                      </b>
+                    </span>
+                    <strong>
+                      Final score
+                      <b>{calculatedFinalScore.total.toFixed(1)} / 100</b>
+                    </strong>
+                    <span
+                      className={`final-score-status ${calculatedFinalScore.total >= 40 ? "passed" : "failed"}`}
+                    >
+                      {calculatedFinalScore.total >= 40
+                        ? "PASS MARK REACHED"
+                        : "BELOW PASS MARK (40)"}
+                    </span>
+                  </div>
+                )}
+              </form>
               <div className="results-actions">
                 <button
                   className="secondary-button"
